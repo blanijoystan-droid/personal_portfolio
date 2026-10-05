@@ -2,202 +2,181 @@
 
 import React, { useRef } from 'react';
 import { motion, useInView, type Variants } from 'framer-motion';
-import { User, Calendar, Target } from 'lucide-react';
-import { PERSONAL_INFO, TIMELINE_DATA } from '@/data/portfolioData';
+import { Anchor, Compass, Layers } from 'lucide-react';
+import { TIMELINE_DATA } from '@/data/portfolioData';
+import { getZone } from '@/lib/depthZones';
 
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
+const ZONE = getZone('about');
+
+const rise: Variants = {
+  hidden: { opacity: 0, y: 26 },
   visible: (d = 0) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.6, delay: d, ease: [0.22, 1, 0.36, 1] as const },
+    transition: { duration: 1.3, delay: d, ease: [0.22, 1, 0.36, 1] as const },
   }),
 };
 
+/** Shared section header so every zone reads the same way. */
+function ZoneHeading({
+  id,
+  title,
+  subtitle,
+}: {
+  id: string;
+  title: string;
+  subtitle: string;
+}) {
+  return (
+    <div className="mb-16 text-center">
+      <p className="mb-4 font-mono text-[10px] tracking-[0.34em] text-[#6fa9b0] uppercase">
+        {ZONE.zone} · {ZONE.depth} M
+      </p>
+      <h2
+        id={id}
+        className="mb-4 text-3xl font-light tracking-tight text-[#f2fbfa] text-balance sm:text-4xl"
+      >
+        {title}
+      </h2>
+      <p className="font-mono text-[11px] tracking-[0.22em] text-[#8fd8d4] uppercase">
+        {subtitle}
+      </p>
+    </div>
+  );
+}
+
 export function AboutSection() {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-80px' });
+  const isInView = useInView(ref, { once: true, margin: '-120px' });
 
   return (
     <section
-      id="section-about"
       ref={ref}
-      aria-label="About Blani"
-      className="relative min-h-screen flex flex-col justify-center px-6 py-24 max-w-5xl mx-auto"
+      id="section-about"
+      className="deep-section relative px-6"
+      aria-labelledby="about-heading"
     >
-      {/* Section Header */}
-      <motion.div
-        custom={0}
-        initial="hidden"
-        animate={isInView ? 'visible' : 'hidden'}
-        variants={fadeUp}
-        className="flex items-center gap-3 mb-10"
-      >
-        <span className="w-6 h-px bg-cyan-400" />
-        <span className="font-mono text-[11px] tracking-widest text-cyan-400 uppercase">NODE: BIO-01</span>
-        <span className="w-6 h-px bg-cyan-400" />
-      </motion.div>
+      <div className="mx-auto max-w-5xl">
+        <motion.div
+          initial="hidden"
+          animate={isInView ? 'visible' : 'hidden'}
+          variants={rise}
+        >
+          <ZoneHeading
+            id="about-heading"
+            title="The Diver"
+            subtitle="Operator profile · First light in the water"
+          />
+        </motion.div>
 
-      <div className="grid md:grid-cols-2 gap-10">
-        {/* Left Column — Identity Panel */}
-        <div className="flex flex-col gap-5">
-          <motion.h2
-            custom={0.1}
+        <div className="grid gap-8 lg:grid-cols-[1.05fr_1fr] lg:gap-12">
+          {/* Identity — presented as a salvaged logbook, not a dashboard card */}
+          <motion.article
             initial="hidden"
             animate={isInView ? 'visible' : 'hidden'}
-            variants={fadeUp}
-            className="text-3xl sm:text-4xl font-bold tracking-tight text-white"
+            variants={rise}
+            custom={0.15}
+            className="glass rim-top relative overflow-hidden rounded-3xl p-8 md:p-10"
           >
-            ABOUT <span className="text-cyan-400">SYSTEM</span>
-          </motion.h2>
-
-          {/* Holographic Identity Card */}
-          <motion.div
-            custom={0.2}
-            initial="hidden"
-            animate={isInView ? 'visible' : 'hidden'}
-            variants={fadeUp}
-            className="hud-panel-glow rounded-xl p-5"
-          >
-            <div className="flex items-center gap-3 mb-4 pb-3 border-b border-white/10">
-              <div className="w-10 h-10 rounded-full bg-cyan-500/20 border border-cyan-400/40 flex items-center justify-center">
-                <User className="w-5 h-5 text-cyan-400" />
+            <div className="mb-7 flex items-center gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-[#9fd8d4]/25 bg-[#0d3a4a]/70">
+                <Anchor className="h-6 w-6 text-[#a8e4e0]" />
               </div>
               <div>
-                <div className="font-bold text-white text-sm tracking-wide">{PERSONAL_INFO.name}</div>
-                <div className="font-mono text-[10px] text-cyan-400 tracking-widest">{PERSONAL_INFO.education.degree}</div>
+                <h3 className="text-2xl font-light tracking-tight text-[#f2fbfa]">
+                  BLANI JOYSTAN DCUNHA
+                </h3>
+                <p className="mt-1 font-mono text-[10px] tracking-[0.24em] text-[#6fa9b0]/80 uppercase">
+                  Computer Science Engineering Student
+                </p>
               </div>
             </div>
 
-            <div className="space-y-2.5 text-sm text-slate-300 leading-relaxed">
+            <div className="space-y-5 text-[15px] leading-relaxed text-[#cfe4e2]">
               <p>
-                I am a CSE student focused on becoming a strong software engineer through
-                building real-world systems, solving algorithmic problems and exploring modern technologies.
+                I am a Computer Science Engineering student focused on becoming a
+                strong software engineer through building real-world systems,
+                solving algorithmic problems and exploring modern technologies.
               </p>
-              <p>
-                My interests span <span className="text-cyan-300 font-semibold">full-stack development</span>,{' '}
-                <span className="text-blue-300 font-semibold">AI & machine learning</span>,{' '}
-                <span className="text-purple-300 font-semibold">cloud infrastructure</span>, and{' '}
-                <span className="text-emerald-300 font-semibold">distributed backend systems</span>.
-              </p>
-              <p>
-                I enjoy building systems rather than just static projects — every line of code I write
-                is oriented toward solving a real problem.
+              <p className="border-l-2 border-[#6fd0cc]/40 pl-4 font-mono text-[13px] tracking-[0.04em] text-[#a8e4e0] italic">
+                &ldquo;Student today. Engineer in progress. Builder by nature.&rdquo;
               </p>
             </div>
 
-            {/* Focus Areas */}
-            <div className="mt-4 pt-3 border-t border-white/10 flex flex-wrap gap-1.5">
+            {/* Focus, kept identical to the original content */}
+            <div className="mt-9 grid gap-3 sm:grid-cols-2">
               {[
-                'Full Stack Development',
-                'Backend Engineering',
-                'Distributed Systems',
-                'AI / Machine Learning',
-                'Cloud & DevOps',
-                'Problem Solving',
-              ].map(tag => (
-                <span
-                  key={tag}
-                  className="px-2 py-0.5 rounded-full font-mono text-[9px] tracking-wider"
-                  style={{
-                    background: 'rgba(0, 240, 255, 0.1)',
-                    border: '1px solid rgba(0, 240, 255, 0.25)',
-                    color: '#67e8f9',
-                  }}
-                >
-                  {tag}
-                </span>
+                { icon: Compass, label: 'Full Stack Development' },
+                { icon: Layers, label: 'AI / Machine Learning' },
+                { icon: Anchor, label: 'Cloud / DevOps' },
+                { icon: Layers, label: 'Distributed Systems' },
+              ].map((item) => (
+                <div key={item.label} className="glass-soft flex items-center gap-3 rounded-2xl px-4 py-3.5">
+                  <item.icon className="h-4 w-4 shrink-0 text-[#8fd8d4]" />
+                  <span className="text-[13px] text-[#cfe4e2]/90">{item.label}</span>
+                </div>
               ))}
             </div>
-          </motion.div>
-        </div>
+          </motion.article>
 
-        {/* Right Column — Timeline */}
-        <div className="flex flex-col gap-4">
+          {/* Timeline — a descent log rather than a stepper widget */}
           <motion.div
-            custom={0.25}
             initial="hidden"
             animate={isInView ? 'visible' : 'hidden'}
-            variants={fadeUp}
-            className="flex items-center gap-2 mb-2"
+            variants={rise}
+            custom={0.3}
+            className="relative"
           >
-            <Calendar className="w-4 h-4 text-slate-400" />
-            <span className="font-mono text-xs text-slate-400 tracking-wider uppercase">Engineering Timeline</span>
-          </motion.div>
+            {/* Continuous sounding line down the side of the timeline */}
+            <span
+              aria-hidden="true"
+              className="absolute top-2 bottom-2 left-[7px] w-px bg-gradient-to-b from-[#6fd0cc]/40 via-[#4f8a91]/30 to-transparent"
+            />
 
-          {TIMELINE_DATA.map((entry, index) => (
-            <motion.div
-              key={entry.year}
-              custom={0.3 + index * 0.1}
-              initial="hidden"
-              animate={isInView ? 'visible' : 'hidden'}
-              variants={fadeUp}
-              className="relative flex gap-4"
-            >
-              {/* Timeline connector line */}
-              {index < TIMELINE_DATA.length - 1 && (
-                <div className="absolute left-[18px] top-10 bottom-0 w-px bg-gradient-to-b from-cyan-500/30 to-transparent" />
-              )}
-
-              {/* Year badge */}
-              <div className="flex-shrink-0 flex flex-col items-center">
-                <div
-                  className="w-9 h-9 rounded-full flex items-center justify-center font-mono text-[9px] font-bold border"
-                  style={{
-                    background: entry.status === 'active'
-                      ? 'rgba(0, 240, 255, 0.15)'
-                      : entry.status === 'future'
-                      ? 'rgba(139, 92, 246, 0.1)'
-                      : 'rgba(255, 255, 255, 0.05)',
-                    borderColor: entry.status === 'active'
-                      ? 'rgba(0, 240, 255, 0.5)'
-                      : entry.status === 'future'
-                      ? 'rgba(139, 92, 246, 0.4)'
-                      : 'rgba(255, 255, 255, 0.12)',
-                    color: entry.status === 'active' ? '#00f0ff'
-                      : entry.status === 'future' ? '#a78bfa' : '#94a3b8',
-                  }}
+            <ol className="space-y-8">
+              {TIMELINE_DATA.map((entry, idx) => (
+                <motion.li
+                  key={entry.year}
+                  initial="hidden"
+                  animate={isInView ? 'visible' : 'hidden'}
+                  variants={rise}
+                  custom={0.4 + idx * 0.12}
+                  className="relative pl-9"
                 >
-                  {entry.year.slice(2)}
-                </div>
-              </div>
-
-              {/* Content */}
-              <div
-                className="flex-1 p-3.5 rounded-lg mb-1"
-                style={{
-                  background: entry.status === 'active'
-                    ? 'rgba(0, 240, 255, 0.06)'
-                    : 'rgba(255, 255, 255, 0.03)',
-                  border: entry.status === 'active'
-                    ? '1px solid rgba(0, 240, 255, 0.2)'
-                    : '1px solid rgba(255, 255, 255, 0.07)',
-                }}
-              >
-                <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-mono text-[10px] font-bold text-cyan-300 tracking-wider">{entry.year}</span>
-                  {entry.status === 'active' && (
-                    <span className="font-mono text-[8px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 tracking-wider">
-                      CURRENT
-                    </span>
-                  )}
-                  {entry.status === 'future' && (
-                    <span className="font-mono text-[8px] px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30 tracking-wider">
-                      HORIZON
-                    </span>
-                  )}
-                </div>
-                <div className="text-sm font-semibold text-white mb-1">{entry.title}</div>
-                <div className="text-xs text-slate-400 leading-relaxed">{entry.description}</div>
-                <div className="flex items-center gap-1.5 mt-2">
-                  <Target className="w-2.5 h-2.5 text-slate-500" />
-                  <span className="font-mono text-[9px] text-slate-500 tracking-wider">{entry.milestone}</span>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+                  <span
+                    aria-hidden="true"
+                    className={`absolute top-1.5 left-0 h-3.5 w-3.5 rounded-full border ${
+                      entry.status === 'future'
+                        ? 'border-[#4f8a91]/60 bg-transparent'
+                        : 'border-[#8fd8d4]/70 bg-[#0d3a4a]'
+                    }`}
+                  />
+                  <p className="mb-1.5 font-mono text-[10px] tracking-[0.28em] text-[#8fd8d4] uppercase">
+                    {entry.year}
+                    {entry.status === 'active' && (
+                      <span className="ml-2 text-[#9ff2ec]">· current</span>
+                    )}
+                    {entry.status === 'future' && (
+                      <span className="ml-2 text-[#4f8a91]">· ahead</span>
+                    )}
+                  </p>
+                  <h4 className="mb-2 text-lg font-light tracking-tight text-[#eef8f7]">
+                    {entry.title}
+                  </h4>
+                  <p className="mb-2.5 text-[14px] leading-relaxed text-[#b8d4d2]">
+                    {entry.description}
+                  </p>
+                  <p className="font-mono text-[10px] tracking-[0.14em] text-[#6fa9b0] uppercase">
+                    {entry.milestone}
+                  </p>
+                </motion.li>
+              ))}
+            </ol>
+          </motion.div>
         </div>
       </div>
     </section>
   );
 }
+
+export { ZoneHeading };

@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Volume2, VolumeX, Compass, Terminal, FileText, Map } from 'lucide-react';
-import { soundFx } from '@/lib/soundEffects';
+import React from 'react';
+import { motion } from 'framer-motion';
+import { MapPin, Terminal, FileText, Waves, Anchor } from 'lucide-react';
 
 interface HudOverlayProps {
   activeSection: string;
@@ -11,15 +11,15 @@ interface HudOverlayProps {
   onOpenResume: () => void;
 }
 
-const SECTION_CODES: Record<string, string> = {
-  home: 'CORE-00',
-  about: 'BIO-01',
-  skills: 'SKL-02',
-  projects: 'PRJ-03',
-  experience: 'EXP-04',
-  achievements: 'ACH-05',
-  certifications: 'CRT-06',
-  contact: 'COM-07',
+const SECTION_LABELS: Record<string, { label: string; code: string; icon: React.ComponentType<{ className?: string }> }> = {
+  home: { label: 'SURFACE', code: 'HME', icon: Waves },
+  about: { label: 'PROFILE', code: 'ABT', icon: Anchor },
+  skills: { label: 'TECH-STACK', code: 'SKL', icon: Anchor },
+  projects: { label: 'REEF', code: 'PRJ', icon: Anchor },
+  experience: { label: 'VOYAGE', code: 'EXP', icon: Anchor },
+  achievements: { label: 'VAULT', code: 'ACH', icon: Anchor },
+  certifications: { label: 'CREDS', code: 'CRT', icon: Anchor },
+  contact: { label: 'COMMS', code: 'COM', icon: Anchor },
 };
 
 export function HudOverlay({
@@ -28,139 +28,107 @@ export function HudOverlay({
   onOpenTerminal,
   onOpenResume,
 }: HudOverlayProps) {
-  const [isMuted, setIsMuted] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  const [scrollPercent, setScrollPercent] = useState(0);
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    handleResize();
-    window.addEventListener('resize', handleResize);
-
-    const handleScroll = () => {
-      const total = document.documentElement.scrollHeight - window.innerHeight;
-      if (total > 0) {
-        setScrollPercent(Math.min(100, Math.round((window.scrollY / total) * 100)));
-      }
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
-  const handleToggleSound = () => {
-    const nextState = soundFx.toggleMute();
-    setIsMuted(nextState);
-  };
-
-  const nodeCode = SECTION_CODES[activeSection] || 'CORE-00';
+  const current = SECTION_LABELS[activeSection] || SECTION_LABELS.home;
 
   return (
-    <div className="fixed inset-0 pointer-events-none z-30 flex flex-col justify-between p-3 sm:p-5 select-none font-mono text-[10px] text-slate-400">
-      {/* Top telemetry bar */}
-      <div className="flex justify-between items-start gap-4">
-        {/* Top-Left: System Telemetry */}
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[#090e18]/80 border border-white/10 backdrop-blur-md text-slate-300">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-cyan-400 font-bold">SYSTEM STATUS:</span> ONLINE
+    <>
+      {/* Top HUD Bar */}
+      <motion.div
+        initial={{ opacity: 0, y: -30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.5 }}
+        className="fixed top-0 left-0 right-0 z-40 ocean-panel-glow border-b border-teal-bright/20 px-4 py-3"
+      >
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          {/* Left - System Status */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-teal-bright animate-biolum" />
+              <span className="font-mono text-[10px] tracking-widest uppercase text-teal-bright">SYSTEM ONLINE</span>
+            </div>
+            <div className="hidden md:flex items-center gap-2 px-3 py-1 rounded-full bg-ocean-deep/50 border border-teal-bright/20">
+              <current.icon className="w-3 h-3 text-teal-bright" />
+              <span className="font-mono text-[10px] tracking-wider text-white">{current.label}</span>
+              <span className="font-mono text-[10px] text-teal-bright/60">{'// ' + current.code}</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-2 px-2.5 py-0.5 text-[9px] text-slate-400 bg-[#090e18]/60 border border-white/5 backdrop-blur-sm rounded w-fit">
-            <span>NODE:</span>
-            <span className="text-cyan-300 font-bold">{nodeCode}</span>
-            <span className="text-slate-400">|</span>
-            <span className="hidden sm:inline">ENV:</span>
-            <span className="text-slate-300 hidden sm:inline">DEVELOPER-WORLD</span>
+          {/* Center - Depth/Pressure */}
+          <div className="hidden lg:flex items-center gap-6 font-mono text-[10px] text-slate-400">
+            <div className="flex items-center gap-1">
+              <span className="text-teal-bright">DEPTH:</span>
+              <span className="text-white font-medium">2,847M</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-coral">PRESSURE:</span>
+              <span className="text-white font-medium">284 ATM</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-aqua">TEMP:</span>
+              <span className="text-white font-medium">2.1°C</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="text-teal-bright">SALINITY:</span>
+              <span className="text-white font-medium">35.2 PSU</span>
+            </div>
+          </div>
+
+          {/* Right - Controls */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onOpenMap}
+              className="ocean-pill px-3 py-1.5 rounded-xl text-[10px] font-mono font-medium tracking-wider flex items-center gap-1.5 hover:bg-teal-bright/10 transition-colors"
+            >
+              <MapPin className="w-3.5 h-3.5" />
+              NAV
+            </button>
+            <button
+              onClick={onOpenTerminal}
+              className="ocean-pill px-3 py-1.5 rounded-xl text-[10px] font-mono font-medium tracking-wider flex items-center gap-1.5 hover:bg-teal-bright/10 transition-colors"
+            >
+              <Terminal className="w-3.5 h-3.5" />
+              TERM
+            </button>
+            <button
+              onClick={onOpenResume}
+              className="ocean-pill px-3 py-1.5 rounded-xl text-[10px] font-mono font-medium tracking-wider flex items-center gap-1.5 hover:bg-teal-bright/10 transition-colors"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              LOG
+            </button>
           </div>
         </div>
+      </motion.div>
 
-        {/* Top-Right: Quick Shortcuts & Audio */}
-        <div className="flex items-center gap-2 pointer-events-auto">
-          {/* System Map Button */}
-          <button
-            onClick={onOpenMap}
-            data-cursor="MAP"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-[#090e18]/80 hover:bg-cyan-950/80 border border-white/10 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-300 transition-all backdrop-blur-md"
-            title="System Map (Constellation Navigation)"
-          >
-            <Map className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden md:inline font-bold">MAP</span>
-          </button>
-
-          {/* Terminal Button */}
-          <button
-            onClick={onOpenTerminal}
-            data-cursor="TERM"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-[#090e18]/80 hover:bg-purple-950/80 border border-white/10 hover:border-purple-500/50 text-slate-300 hover:text-purple-300 transition-all backdrop-blur-md"
-            title="Terminal Console (CTRL+K)"
-          >
-            <Terminal className="w-3.5 h-3.5 text-purple-400" />
-            <span className="hidden md:inline font-bold">TERM</span>
-            <span className="hidden lg:inline text-[8px] px-1 py-0.5 bg-white/10 rounded text-slate-300">
-              ^K
+      {/* Bottom Progress/Section Indicator */}
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.7 }}
+        className="fixed bottom-0 left-0 right-0 z-40 ocean-panel-glow border-t border-teal-bright/20 px-4 py-2"
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-1">
+            <span className="font-mono text-[9px] tracking-widest uppercase text-teal-bright/70">
+              CURRENT SECTOR
             </span>
-          </button>
-
-          {/* Resume Terminal Button */}
-          <button
-            onClick={onOpenResume}
-            data-cursor="RESUME"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded bg-[#090e18]/80 hover:bg-emerald-950/80 border border-white/10 hover:border-emerald-500/50 text-slate-300 hover:text-emerald-300 transition-all backdrop-blur-md"
-            title="Open Resume Reader"
-          >
-            <FileText className="w-3.5 h-3.5 text-emerald-400" />
-            <span className="hidden md:inline font-bold">RESUME</span>
-          </button>
-
-          {/* Sound FX Toggle */}
-          <button
-            onClick={handleToggleSound}
-            data-cursor="AUDIO"
-            className="flex items-center justify-center p-1.5 rounded bg-[#090e18]/80 hover:bg-cyan-950/80 border border-white/10 hover:border-cyan-500/50 text-slate-300 hover:text-cyan-300 transition-all backdrop-blur-md"
-            title={isMuted ? 'Unmute Sci-Fi Audio FX' : 'Mute Audio FX'}
-          >
-            {isMuted ? (
-              <VolumeX className="w-3.5 h-3.5 text-slate-400" />
-            ) : (
-              <Volume2 className="w-3.5 h-3.5 text-cyan-400 animate-pulse" />
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* Bottom telemetry bar */}
-      <div className="flex justify-between items-end gap-4">
-        {/* Bottom-Left: Navigation Hints */}
-        <div className="flex flex-col gap-1">
-          <div className="px-2.5 py-1 rounded bg-[#090e18]/80 border border-white/10 backdrop-blur-md text-cyan-300 flex items-center gap-2">
-            <Compass className="w-3.5 h-3.5 text-cyan-400 animate-spin" style={{ animationDuration: '12s' }} />
-            <span className="font-semibold text-[9px] tracking-wider uppercase">
-              {isMobile ? 'SWIPE TO EXPLORE • TAP A NODE' : 'DRAG TO EXPLORE • CLICK A NODE'}
+            <span className="font-mono text-[9px] tracking-widest text-teal-bright">
+              {current.label + ' // ' + current.code}
             </span>
           </div>
-
-          <div className="text-[8px] text-slate-400 hidden sm:block">
-            LATENCY: <span className="text-slate-300">12ms</span> (ILLUSTRATIVE) • BUILD: <span className="text-slate-300">2026.1</span>
-          </div>
-        </div>
-
-        {/* Bottom-Right: Scroll Progress & Sync */}
-        <div className="flex items-center gap-3">
-          <div className="hidden sm:flex flex-col items-end text-[9px] text-slate-400">
-            <span>SYNC: {scrollPercent}%</span>
-            <div className="w-20 h-1 bg-slate-800 rounded-full overflow-hidden mt-1">
-              <div
-                className="h-full bg-cyan-400 transition-all duration-150"
-                style={{ width: `${scrollPercent}%` }}
-              />
+          <div className="h-1.5 bg-ocean-deep/50 rounded-full overflow-hidden relative">
+            <div 
+              className="h-full bg-gradient-to-r from-teal-bright via-aqua to-biolum"
+              style={{ width: '12.5%' }}
+            />
+            <div className="absolute top-0 left-0 right-0 bottom-0 bg-ocean-deep/50">
+              {[12.5, 25, 37.5, 50, 62.5, 75, 87.5].map((pos) => (
+                <div key={pos} className="absolute top-0 bottom-0 w-px bg-teal-bright/20" style={{ left: `${pos}%` }} />
+              ))}
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </motion.div>
+    </>
   );
 }

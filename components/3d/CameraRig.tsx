@@ -24,7 +24,7 @@ export function CameraRig({ activeSection, isReducedMotion = false }: CameraRigP
   const { camera } = useThree();
   const currentLookAt = useRef(new THREE.Vector3(0, 0, 0));
 
-  useFrame((state, _delta) => {
+  useFrame((state) => {
     const target = SECTION_CAMERAS[activeSection] || SECTION_CAMERAS.home;
     const targetPos = new THREE.Vector3(...target.pos);
     const targetLookAt = new THREE.Vector3(...target.lookAt);

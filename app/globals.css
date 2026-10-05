@@ -1,14 +1,60 @@
 @import "tailwindcss";
 
+/*
+ * Tailwind v4 registers design tokens through `@theme`, NOT `:root`.
+ * Without this block every `bg-ocean-deep`, `text-teal-bright`, etc. is an
+ * unknown utility and renders as nothing.
+ */
+@theme {
+  --color-ocean-deep: #000814;
+  --color-ocean-mid: #001428;
+  --color-ocean-shallow: #001f3f;
+  --color-ocean-surface: #003d66;
+  --color-deep-blue: #001a3a;
+  --color-deep-teal: #003d4d;
+  --color-teal-bright: #00c9cc;
+  --color-teal-soft: #4fd1d4;
+  --color-aqua: #00ffff;
+  --color-seafoam: #6ae8e8;
+  --color-biolum-blue: #00d4ff;
+  --color-biolum-cyan: #00fff7;
+  --color-biolum-white: #e0ffff;
+  --color-bubble: #80ffff;
+  --color-coral: #ff4455;
+  --color-coral-light: #ff7788;
+  --color-pearl: #e8ffff;
+  --color-sand: #c8d8e8;
+  --color-kelp: #1a5c3a;
+  --color-kelp-bright: #3acc66;
+  --color-biolum: #00d4ff;
+  --color-abyss: #00040a;
+}
+
 @layer base {
   :root {
-    --background: #04060a;
-    --foreground: #f1f5f9;
-    --primary-cyan: #00f0ff;
-    --primary-blue: #3b82f6;
-    --primary-purple: #8b5cf6;
-    --surface-dark: #090d16;
-    --border-dark: rgba(255, 255, 255, 0.08);
+    /* Deep Ocean Theme Color Palette */
+    --ocean-deep: #000814;
+    --ocean-mid: #001428;
+    --ocean-shallow: #001f3f;
+    --ocean-surface: #003d66;
+    --deep-blue: #001a3a;
+    --deep-teal: #003d4d;
+    --teal-bright: #00c9cc;
+    --teal-soft: #4fd1d4;
+    --aqua: #00ffff;
+    --seafoam: #6ae8e8;
+    --biolum-blue: #00d4ff;
+    --biolum-cyan: #00fff7;
+    --biolum-white: #e0ffff;
+    --bubble: #80ffff;
+    --coral: #ff4455;
+    --coral-light: #ff7788;
+    --pearl: #e8ffff;
+    --sand: #c8d8e8;
+    --kelp: #1a5c3a;
+    --kelp-bright: #3acc66;
+    --biolum: #00d4ff;
+    --abyss: #00040a;
   }
 
   * {
@@ -17,133 +63,452 @@
 
   html {
     scroll-behavior: smooth;
-    background-color: #04060a;
-    color: #f1f5f9;
+    background-color: var(--ocean-deep);
+    color: var(--pearl);
     font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   body {
-    background-color: #04060a;
-    color: #f1f5f9;
+    background-color: var(--ocean-deep);
+    color: var(--pearl);
     overflow-x: hidden;
     margin: 0;
     padding: 0;
-    selection-background-color: #00f0ff;
-    selection-color: #04060a;
+    selection-background-color: var(--teal-bright);
+    selection-color: var(--ocean-deep);
   }
 
   ::selection {
-    background: #00f0ff;
-    color: #04060a;
+    background: var(--teal-bright);
+    color: var(--ocean-deep);
   }
 
-  /* Custom high-tech scrollbar */
+  /* Ocean-themed scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    background: #060911;
+    background: var(--ocean-deep);
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(0, 240, 255, 0.25);
+    background: linear-gradient(180deg, var(--teal-bright), var(--ocean-surface));
     border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(0, 240, 255, 0.5);
+    background: linear-gradient(180deg, var(--biolum), var(--teal-bright));
   }
 }
 
-/* Glassmorphism & High-Tech HUD Styling */
-.hud-panel {
-  background: rgba(10, 15, 26, 0.65);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+/* Ocean Glassmorphism Panels - Deep Blue Variant */
+.ocean-panel {
+  background: rgba(0, 10, 25, 0.65);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 200, 200, 0.15);
+  box-shadow: 
+    0 8px 40px 0 rgba(0, 0, 0, 0.6),
+    inset 0 0 60px -10px rgba(0, 200, 200, 0.05);
 }
 
-.hud-panel-glow {
-  background: rgba(10, 15, 26, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(0, 240, 255, 0.25);
-  box-shadow: 0 0 25px -5px rgba(0, 240, 255, 0.15), inset 0 0 20px -10px rgba(0, 240, 255, 0.1);
+.ocean-panel-glow {
+  background: rgba(0, 10, 25, 0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(0, 200, 200, 0.25);
+  box-shadow: 
+    0 0 60px -10px rgba(0, 200, 200, 0.2),
+    inset 0 0 40px -10px rgba(0, 200, 200, 0.1);
 }
 
-.hud-panel-purple {
-  background: rgba(13, 11, 26, 0.75);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(139, 92, 246, 0.25);
-  box-shadow: 0 0 25px -5px rgba(139, 92, 246, 0.15);
+.ocean-panel-coral {
+  background: rgba(30, 10, 15, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 68, 85, 0.25);
+  box-shadow: 
+    0 0 40px -10px rgba(255, 68, 85, 0.15),
+    inset 0 0 25px -10px rgba(255, 68, 85, 0.08);
 }
 
-.hud-pill {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  transition: all 0.2s ease-in-out;
+.ocean-pill {
+  background: rgba(0, 20, 40, 0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 200, 200, 0.12);
+  transition: all 0.25s ease-in-out;
 }
 
-.hud-pill:hover {
-  background: rgba(0, 240, 255, 0.1);
-  border-color: rgba(0, 240, 255, 0.3);
+.ocean-pill:hover {
+  background: rgba(0, 200, 200, 0.15);
+  border-color: rgba(0, 255, 255, 0.35);
+  color: var(--biolum-cyan);
 }
 
-/* Sci-fi Scanlines */
-.scanline-overlay {
-  background: linear-gradient(
-    to bottom,
-    rgba(255,255,255,0),
-    rgba(255,255,255,0) 50%,
-    rgba(0, 0, 0, 0.25) 50%,
-    rgba(0, 0, 0, 0.25)
-  );
-  background-size: 100% 4px;
+/* Deep Ocean Caustics / Light Rays Through Water */
+.ocean-caustics {
+  background: 
+    radial-gradient(ellipse 70% 50% at 15% -10%, rgba(0, 200, 200, 0.08) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 40% at 85% 10%, rgba(0, 180, 200, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 50% 90%, rgba(0, 255, 255, 0.04) 0%, transparent 45%),
+    radial-gradient(ellipse 40% 30% at 30% 30%, rgba(0, 255, 247, 0.03) 0%, transparent 40%);
+  background-size: 300% 300%;
+  animation: caustics-drift 25s ease-in-out infinite;
   pointer-events: none;
 }
 
-/* Subtle Technical Grid */
-.bg-tech-grid {
-  background-size: 40px 40px;
+@keyframes caustics-drift {
+  0%, 100% { background-position: 0% 0%; }
+  20% { background-position: 80% 10%; }
+  40% { background-position: 100% 50%; }
+  60% { background-position: 60% 90%; }
+  80% { background-position: 20% 100%; }
+}
+
+/* Deep Ocean Current Grid Lines - very subtle */
+.bg-ocean-grid {
+  background-size: 80px 80px;
   background-image: 
-    linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    linear-gradient(to right, rgba(0, 200, 200, 0.015) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 200, 200, 0.015) 1px, transparent 1px);
 }
 
-/* Glow effects */
-.glow-cyan-text {
-  text-shadow: 0 0 12px rgba(0, 240, 255, 0.6);
+/* Bioluminescent Glow Effects - Deep Blue Variants */
+.glow-biolum {
+  text-shadow: 0 0 20px rgba(0, 255, 247, 0.8), 0 0 40px rgba(0, 200, 200, 0.5);
 }
 
-.glow-blue-text {
-  text-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
+.glow-teal {
+  text-shadow: 0 0 16px rgba(0, 200, 200, 0.7), 0 0 32px rgba(0, 180, 200, 0.4);
 }
 
-/* Pulse animation for node radar */
-@keyframes radar-pulse {
-  0% {
-    transform: scale(0.95);
-    opacity: 0.8;
-  }
-  50% {
-    transform: scale(1.4);
-    opacity: 0.2;
-  }
-  100% {
-    transform: scale(1.8);
-    opacity: 0;
-  }
+.glow-coral {
+  text-shadow: 0 0 16px rgba(255, 68, 85, 0.7), 0 0 32px rgba(255, 68, 85, 0.4);
 }
 
-.animate-radar {
-  animation: radar-pulse 2.5s cubic-bezier(0.2, 0.8, 0.2, 1) infinite;
+.glow-biolum-blue {
+  text-shadow: 0 0 18px rgba(0, 212, 255, 0.8), 0 0 36px rgba(0, 180, 200, 0.5);
+}
+
+/* Deep ocean current drift for background elements */
+@keyframes ocean-sway {
+  0%, 100% { transform: rotate(-1.5deg) translateX(-3px) translateY(1px); }
+  33% { transform: rotate(1deg) translateX(2px) translateY(-2px); }
+  66% { transform: rotate(-1deg) translateX(-2px) translateY(1px); }
+}
+
+.animate-sway {
+  animation: ocean-sway 8s ease-in-out infinite;
+}
+
+/* Pulse for Bioluminescent Elements - deeper feel */
+@keyframes biolum-pulse {
+  0%, 100% { opacity: 0.5; filter: brightness(0.9); }
+  50% { opacity: 1; filter: brightness(1.4); }
+}
+
+.animate-biolum {
+  animation: biolum-pulse 4s ease-in-out infinite;
+}
+
+/* Underwater Light Rays - god rays through deep water */
+@keyframes light-rays {
+  0%, 100% { opacity: 0.08; transform: scaleY(1) translateX(0); }
+  33% { opacity: 0.18; transform: scaleY(1.05) translateX(-2%); }
+  66% { opacity: 0.12; transform: scaleY(1.02) translateX(1%); }
+}
+
+.animate-light-rays {
+  animation: light-rays 12s ease-in-out infinite;
+}
+
+/* Deep ocean current drift for background elements */
+@keyframes current-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  25% { transform: translate3d(1%, -1%, 0) rotate(0.5deg); }
+  50% { transform: translate3d(-0.5%, 0.5%, 0) rotate(-0.3deg); }
+  75% { transform: translate3d(-1%, 1%, 0) rotate(0.2deg); }
+}
+
+.animate-current-drift {
+  animation: current-drift 30s ease-in-out infinite;
+}
+
+/* Rising marine snow / particulate */
+@keyframes marine-snow {
+  0% { transform: translateY(0) scale(1); opacity: 0.3; }
+  100% { transform: translateY(-150vh) scale(0.5); opacity: 0; }
+}
+
+.animate-marine-snow {
+  animation: marine-snow 20s linear infinite;
+}
+
+/* Fish swimming animation */
+@keyframes fish-swim {
+  0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+  25% { transform: translateX(20px) translateY(-10px) rotate(2deg); }
+  50% { transform: translateX(40px) translateY(5px) rotate(-1deg); }
+  75% { transform: translateX(20px) translateY(10px) rotate(1deg); }
+}
+
+.animate-fish-swim {
+  animation: fish-swim 8s ease-in-out infinite;
+}
+
+/* Fish school coordinated movement */
+@keyframes fish-school {
+  0%, 100% { transform: translateX(0) translateY(0); }
+  25% { transform: translateX(15px) translateY(-8px); }
+  50% { transform: translateX(30px) translateY(5px); }
+  75% { transform: translateX(15px) translateY(8px); }
+}
+
+.animate-fish-school {
+  animation: fish-school 12s ease-in-out infinite;
+}
+
+/* Jellyfish pulse */
+@keyframes jellyfish-pulse {
+  0%, 100% { transform: scaleY(1) scaleX(1); }
+  50% { transform: scaleY(1.3) scaleX(0.85); }
+}
+
+.animate-jellyfish {
+  animation: jellyfish-pulse 3s ease-in-out infinite;
+}
+
+/* Jellyfish tentacle flow */
+@keyframes tentacle-flow {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(15deg); }
+}
+
+.animate-tentacle {
+  animation: tentacle-flow 2s ease-in-out infinite;
+}
+
+/* Kelp sway */
+@keyframes kelp-sway {
+  0%, 100% { transform: rotate(-5deg); }
+  50% { transform: rotate(5deg); }
+}
+
+.animate-kelp {
+  animation: kelp-sway 6s ease-in-out infinite;
+}
+
+/* Coral sway */
+@keyframes coral-sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+.animate-coral {
+  animation: coral-sway 10s ease-in-out infinite;
+}
+
+/* Loading screen animations */
+@keyframes loading-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
+.animate-loading-pulse {
+  animation: loading-pulse 2s ease-in-out infinite;
+}
+
+/* Sonar ping animation */
+@keyframes sonar-ping {
+  0% { transform: scale(0); opacity: 0.8; }
+  100% { transform: scale(3); opacity: 0; }
+}
+
+.animate-sonar {
+  animation: sonar-ping 2s ease-out infinite;
+}
+
+/* Loading bar animation */
+@keyframes loading-bar {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+.animate-loading-bar {
+  animation: loading-bar 3s ease-in-out forwards;
 }
 
 /* Font mono alias */
 .font-mono-tech {
   font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* Focus styles */
+*:focus-visible {
+  outline: 2px solid var(--teal-bright);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   THE DEEP — underwater glass surfaces
+   Deliberately soft and organic: no neon edges, no glowing rectangles.
+   Surfaces should read as wet glass, stone and silt rather than UI chrome.
+   ========================================================================== */
+
+/* Standard underwater glass panel */
+.glass {
+  background: linear-gradient(
+    160deg,
+    rgba(9, 42, 56, 0.62) 0%,
+    rgba(5, 26, 38, 0.72) 100%
+  );
+  backdrop-filter: blur(18px) saturate(115%);
+  -webkit-backdrop-filter: blur(18px) saturate(115%);
+  border: 1px solid rgba(143, 216, 212, 0.14);
+  box-shadow:
+    0 18px 48px -24px rgba(0, 0, 0, 0.85),
+    inset 0 1px 0 rgba(190, 240, 238, 0.07),
+    inset 0 -30px 60px -40px rgba(80, 190, 190, 0.16);
+}
+
+/* Larger, more present surface for primary panels */
+.glass-deep {
+  background: linear-gradient(
+    155deg,
+    rgba(10, 45, 60, 0.72) 0%,
+    rgba(4, 20, 31, 0.84) 100%
+  );
+  backdrop-filter: blur(26px) saturate(120%);
+  -webkit-backdrop-filter: blur(26px) saturate(120%);
+  border: 1px solid rgba(143, 216, 212, 0.2);
+  box-shadow:
+    0 28px 70px -30px rgba(0, 0, 0, 0.9),
+    inset 0 1px 0 rgba(200, 245, 242, 0.09),
+    inset 0 -40px 80px -50px rgba(90, 200, 198, 0.22);
+}
+
+/* Small inline surface: chips, tags, quiet metadata */
+.glass-soft {
+  background: rgba(12, 48, 62, 0.42);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(143, 216, 212, 0.1);
+  transition:
+    background-color 0.4s ease,
+    border-color 0.4s ease,
+    color 0.4s ease;
+}
+
+.glass-soft:hover {
+  background: rgba(20, 72, 92, 0.6);
+  border-color: rgba(159, 242, 236, 0.34);
+  color: var(--seafoam);
+}
+
+/* A wet, mineral surface — used for stone-like objects such as skill artefacts */
+.glass-stone {
+  background: linear-gradient(
+    150deg,
+    rgba(24, 52, 58, 0.8) 0%,
+    rgba(10, 26, 34, 0.9) 100%
+  );
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(120, 160, 160, 0.16);
+  box-shadow:
+    inset 0 2px 3px rgba(190, 230, 228, 0.06),
+    inset 0 -8px 16px -8px rgba(0, 0, 0, 0.7),
+    0 12px 30px -18px rgba(0, 0, 0, 0.8);
+}
+
+/* Soft top rim light, as if catching the last of the surface glow */
+.rim-top::before {
+  content: '';
+  position: absolute;
+  inset-inline: 12%;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(180, 238, 236, 0.4),
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* Section spacing that lets the ocean breathe between panels */
+.deep-section {
+  padding-block: clamp(5rem, 12vh, 9rem);
+  background: linear-gradient(180deg, rgba(0,8,20,0.35) 0%, rgba(0,8,20,0.55) 50%, rgba(0,8,20,0.35) 100%);
+}
+
+/* Calm reveal used by every section — slow, oceanic, never bouncy */
+@keyframes surface-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 26px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.rise {
+  animation: surface-rise 1.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Terminal styles */
+.terminal-window {
+  background: rgba(0, 8, 20, 0.95);
+  border: 1px solid rgba(0, 200, 200, 0.3);
+  box-shadow: 0 0 40px -10px rgba(0, 200, 200, 0.3);
+}
+
+.terminal-prompt {
+  color: var(--teal-bright);
+}
+
+.terminal-output {
+  color: var(--seafoam);
+}
+
+.terminal-command {
+  color: var(--biolum-cyan);
+}
+
+/* Custom cursor styles */
+.cursor-dot {
+  width: 8px;
+  height: 8px;
+  background: var(--teal-bright);
+  border-radius: 50%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+}
+
+.cursor-ring {
+  width: 32px;
+  height: 32px;
+  border: 2px solid rgba(0, 200, 200, 0.4);
+  border-radius: 50%;
+  pointer-events: none;
+  transition: transform 0.1s ease-out;
+}
+
+.cursor-ring.expanded {
+  transform: scale(2);
+  border-color: rgba(0, 255, 247, 0.6);
 }

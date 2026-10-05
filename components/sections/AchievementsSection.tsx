@@ -1,118 +1,159 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { motion, useInView, type Variants } from 'framer-motion';
-import { Trophy, Star, Award } from 'lucide-react';
+import { motion, type Variants } from 'framer-motion';
+import { Trophy, Medal, Sparkles, Award } from 'lucide-react';
 import { ACHIEVEMENTS_DATA } from '@/data/portfolioData';
+import { ZoneHeading } from './AboutSection';
 
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (d = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.6, delay: d, ease: [0.22, 1, 0.36, 1] as const } }),
+const rise: Variants = {
+  hidden: { opacity: 0, y: 26 },
+  visible: (d = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 1.3, delay: d, ease: [0.22, 1, 0.36, 1] as const },
+  }),
 };
 
-const BADGE_CONFIG: Record<string, { bg: string; border: string; text: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>; glow: string }> = {
-  gold:   { bg: 'rgba(245, 158, 11, 0.12)', border: 'rgba(245, 158, 11, 0.5)',  text: '#fbbf24', icon: Trophy, glow: '0 0 30px rgba(245, 158, 11, 0.25)' },
-  silver: { bg: 'rgba(148, 163, 184, 0.1)',  border: 'rgba(148, 163, 184, 0.4)', text: '#94a3b8', icon: Award,  glow: '0 0 20px rgba(148, 163, 184, 0.15)' },
-  cyan:   { bg: 'rgba(0, 240, 255, 0.1)',    border: 'rgba(0, 240, 255, 0.4)',   text: '#00f0ff', icon: Star,   glow: '0 0 20px rgba(0, 240, 255, 0.2)' },
-  bronze: { bg: 'rgba(180, 83, 9, 0.1)',     border: 'rgba(180, 83, 9, 0.4)',    text: '#c2410c', icon: Award,  glow: 'none' },
+const BADGE_CONFIG: Record<string, { bg: string; border: string; text: string; icon: React.ComponentType<{ className?: string }>; glow: string }> = {
+  gold: {
+    bg: 'bg-gradient-to-br from-[#ffd700] to-[#ffaa00]',
+    border: 'border-[#ffd700]/50',
+    text: 'text-[#04161d]',
+    icon: Trophy,
+    glow: 'shadow-[#ffd700]/40',
+  },
+  silver: {
+    bg: 'bg-gradient-to-br from-[#c0c0c0] to-[#a8a8a8]',
+    border: 'border-[#c0c0c0]/50',
+    text: 'text-[#04161d]',
+    icon: Medal,
+    glow: 'shadow-[#c0c0c0]/40',
+  },
+  bronze: {
+    bg: 'bg-gradient-to-br from-[#cd7f32] to-[#b87333]',
+    border: 'border-[#cd7f32]/50',
+    text: 'text-[#04161d]',
+    icon: Medal,
+    glow: 'shadow-[#cd7f32]/40',
+  },
+  cyan: {
+    bg: 'bg-gradient-to-br from-[#4fd1d4] to-[#00c9cc]',
+    border: 'border-[#4fd1d4]/50',
+    text: 'text-[#04161d]',
+    icon: Award,
+    glow: 'shadow-[#4fd1d4]/40',
+  },
+  project: {
+    bg: 'bg-gradient-to-br from-[#ff6b55] to-[#ff4455]',
+    border: 'border-[#ff6b55]/50',
+    text: 'text-white',
+    icon: Sparkles,
+    glow: 'shadow-[#ff6b55]/40',
+  },
 };
 
 export function AchievementsSection() {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-80px' });
 
   return (
     <section
-      id="section-achievements"
       ref={ref}
-      aria-label="Achievements"
-      className="relative min-h-screen flex flex-col justify-center px-6 py-24 max-w-5xl mx-auto"
+      id="section-achievements"
+      className="deep-section relative px-6"
+      aria-labelledby="achievements-heading"
     >
-      <motion.div custom={0} initial="hidden" animate={isInView ? 'visible' : 'hidden'} variants={fadeUp} className="flex items-center gap-3 mb-3">
-        <span className="w-6 h-px bg-amber-400" />
-        <span className="font-mono text-[11px] tracking-widest text-amber-400 uppercase">NODE: ACH-05 // ACHIEVEMENT VAULT</span>
-        <span className="w-6 h-px bg-amber-400" />
-      </motion.div>
+      <div className="mx-auto max-w-4xl">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={rise} custom={0}
+        >
+          <ZoneHeading
+            id="achievements-heading"
+            title="The Treasure Reef"
+            subtitle="Artefacts recovered from the expedition"
+          />
+        </motion.div>
 
-      <motion.h2 custom={0.1} initial="hidden" animate={isInView ? 'visible' : 'hidden'} variants={fadeUp} className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-2">
-        ACHIEVEMENT <span className="text-amber-400">VAULT</span>
-      </motion.h2>
+        <div className="space-y-6">
+          {ACHIEVEMENTS_DATA.map((achievement, idx) => {
+            const config = BADGE_CONFIG[achievement.badgeType] || BADGE_CONFIG.cyan;
+            const Icon = config.icon;
 
-      <motion.p custom={0.2} initial="hidden" animate={isInView ? 'visible' : 'hidden'} variants={fadeUp} className="text-slate-400 text-sm mb-10 max-w-lg">
-        Verified hackathon milestones, project showcases, and competitive engineering records.
-      </motion.p>
+            return (
+              <motion.article
+                key={achievement.id}
+                initial="hidden"
+                animate="visible"
+                variants={rise} custom={0.08 * idx}
+                whileHover={{ y: -4 }}
+              >
+                <div className="glass-deep relative overflow-hidden rounded-3xl p-6 md:p-8 group">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#9ff2ec]/3 via-transparent to-[#ff6b55]/3 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {ACHIEVEMENTS_DATA.map((achievement, index) => {
-          const config = BADGE_CONFIG[achievement.badgeType] || BADGE_CONFIG.silver;
-          const Icon = config.icon;
+                  <div className="relative flex items-start gap-6">
+                    {/* Badge */}
+                    <div className="relative flex-shrink-0">
+                      <div className={`w-20 h-20 rounded-2xl flex items-center justify-center ${config.bg} ${config.border} border-2 ${config.text} ${config.glow}`}>
+                        <Icon className="w-10 h-10" />
+                      </div>
+                      <motion.div
+                        className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-[#9ff2ec]/20 blur-xl animate-biolum"
+                        animate={{ scale: [1, 1.3, 1] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      />
+                    </div>
 
-          return (
-            <motion.div
-              key={achievement.id}
-              custom={0.3 + index * 0.12}
-              initial="hidden"
-              animate={isInView ? 'visible' : 'hidden'}
-              variants={fadeUp}
-              className={`rounded-xl p-5 flex flex-col gap-3 relative overflow-hidden ${
-                achievement.isTopAward ? 'sm:col-span-2 lg:col-span-1' : ''
-              }`}
-              style={{
-                background: config.bg,
-                border: `1px solid ${config.border}`,
-                boxShadow: config.glow,
-              }}
-            >
-              {/* Top badge / award label */}
-              <div className="flex items-start justify-between gap-2">
-                <div
-                  className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{
-                    background: `${config.text}20`,
-                    border: `1px solid ${config.border}`,
-                  }}
-                >
-                  <Icon className="w-5 h-5" style={{ color: config.text }} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className={`px-3 py-1 rounded-full text-[10px] font-mono tracking-widest uppercase font-medium ${config.bg} ${config.text}`}>
+                          {achievement.badgeType.toUpperCase()}
+                        </span>
+                        <span className="font-mono text-[10px] text-[#8fd8d4]">{achievement.id}</span>
+                      </div>
+                      <h3 className="text-xl font-light tracking-tight text-[#f2fbfa] mb-2">
+                        {achievement.title}
+                      </h3>
+                      <p className="text-slate-300 leading-relaxed mb-2">{achievement.description}</p>
+
+                      {achievement.event && (
+                        <p className="mt-2 flex items-center gap-2 text-slate-400 text-sm">
+                          <Award className="w-4 h-4 text-[#9fd8d4]/80" />
+                          <span>{achievement.event}</span>
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Bioluminescent accent line */}
+                  <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#9ff2ec]/40 to-transparent" />
                 </div>
+              </motion.article>
+            );
+          })}
+        </div>
 
-                <div
-                  className="px-2 py-0.5 rounded font-mono text-[8px] font-bold tracking-widest uppercase"
-                  style={{ background: `${config.text}20`, border: `1px solid ${config.border}`, color: config.text }}
-                >
-                  {achievement.badgeType.toUpperCase()}
-                </div>
-              </div>
-
-              {/* Award title */}
-              <div>
-                <div
-                  className="font-mono text-[10px] font-bold tracking-widest uppercase mb-1"
-                  style={{ color: config.text }}
-                >
-                  {achievement.award}
-                </div>
-                <h3 className="text-base font-bold text-white leading-tight">{achievement.title}</h3>
-                <div className="font-mono text-[10px] text-slate-400 mt-0.5">{achievement.event}</div>
-                {achievement.location && (
-                  <div className="font-mono text-[9px] text-slate-500">{achievement.location}</div>
-                )}
-              </div>
-
-              {/* Description */}
-              <p className="text-xs text-slate-400 leading-relaxed">{achievement.description}</p>
-
-              {/* Top award glow effect */}
-              {achievement.isTopAward && (
-                <div
-                  className="absolute inset-0 pointer-events-none rounded-xl"
-                  style={{
-                    background: `radial-gradient(circle at top right, ${config.text}12, transparent 60%)`,
-                  }}
-                />
-              )}
-            </motion.div>
-          );
-        })}
+        {/* Summary Stats */}
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={rise} custom={0.5}
+          className="mt-12 grid grid-cols-3 gap-4 items-stretch"
+        >
+          <div className="glass rim-top text-center min-h-[100px] flex flex-col justify-center">
+            <div className="text-2xl font-bold text-[#ffd700] mb-1">1</div>
+            <div className="font-mono text-[9px] text-slate-400 tracking-wider uppercase leading-tight">TOP 3 FINISH</div>
+          </div>
+          <div className="glass rim-top text-center min-h-[100px] flex flex-col justify-center">
+            <div className="text-2xl font-bold text-[#ff6b55] mb-1">3</div>
+            <div className="font-mono text-[9px] text-slate-400 tracking-wider uppercase">HACKATHONS</div>
+          </div>
+          <div className="glass rim-top text-center min-h-[100px] flex flex-col justify-center">
+            <div className="text-2xl font-bold text-[#9ff2ec] mb-1">2</div>
+            <div className="font-mono text-[9px] text-slate-400 tracking-wider uppercase">PROJECT WINS</div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

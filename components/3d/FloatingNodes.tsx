@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
-import { useFrame } from '@react-three/fiber';
+/* eslint-disable react-hooks/immutability -- R3F useFrame mutations are intentional and safe */
+
+import React, { useMemo, useRef, useState } from 'react';
+import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { Html } from '@react-three/drei';
 import { soundFx } from '@/lib/soundEffects';
@@ -13,206 +15,242 @@ interface NodeConfig {
   position: [number, number, number];
   color: string;
   accent: string;
+  ventColor: string;
 }
 
 const NODES_CONFIG: NodeConfig[] = [
-  {
-    id: "about",
-    code: "BIO-01",
-    name: "ABOUT SYSTEM",
-    position: [-4.6, 2.0, -1.5],
-    color: "#00f0ff",
-    accent: "rgba(0, 240, 255, 0.4)",
-  },
-  {
-    id: "skills",
-    code: "SKL-02",
-    name: "TECH LAB",
-    position: [-5.6, -1.8, 2.5],
-    color: "#3b82f6",
-    accent: "rgba(59, 130, 246, 0.4)",
-  },
-  {
-    id: "projects",
-    code: "PRJ-03",
-    name: "PROJECT ARCHIVE",
-    position: [5.2, 1.8, 2.0],
-    color: "#10b981",
-    accent: "rgba(16, 185, 129, 0.4)",
-  },
-  {
-    id: "experience",
-    code: "EXP-04",
-    name: "ZETHETA EXP",
-    position: [4.6, -2.8, -2.5],
-    color: "#8b5cf6",
-    accent: "rgba(139, 92, 246, 0.4)",
-  },
-  {
-    id: "achievements",
-    code: "ACH-05",
-    name: "ACHIEVEMENT VAULT",
-    position: [0.0, 4.4, 2.2],
-    color: "#f59e0b",
-    accent: "rgba(245, 158, 11, 0.4)",
-  },
-  {
-    id: "certifications",
-    code: "CRT-06",
-    name: "CREDENTIAL ARCHIVE",
-    position: [-3.8, -4.2, 1.0],
-    color: "#ec4899",
-    accent: "rgba(236, 72, 153, 0.4)",
-  },
-  {
-    id: "contact",
-    code: "COM-07",
-    name: "COMM GATEWAY",
-    position: [0.0, -4.8, -2.2],
-    color: "#06b6d4",
-    accent: "rgba(6, 182, 212, 0.4)",
-  },
+  { id: 'about', code: 'ABT', name: 'ABOUT', position: [-5.5, 1.5, -3.0], color: '#00e5d8', accent: '#00fff7', ventColor: '#00e5d8' },
+  { id: 'skills', code: 'SKL', name: 'SKILLS', position: [5.0, 0.5, -4.0], color: '#4efef7', accent: '#7cf0ed', ventColor: '#00e5d8' },
+  { id: 'projects', code: 'PRJ', name: 'PROJECTS', position: [6.0, -1.0, 1.5], color: '#00e5d8', accent: '#00fff7', ventColor: '#00e5d8' },
+  { id: 'experience', code: 'EXP', name: 'EXPERIENCE', position: [3.5, 2.5, 4.0], color: '#88f5e0', accent: '#00fff7', ventColor: '#4efef7' },
+  { id: 'achievements', code: 'ACH', name: 'ACHIEVEMENTS', position: [-4.5, -1.5, 3.5], color: '#ff6b5b', accent: '#ff9a8a', ventColor: '#ff6b5b' },
+  { id: 'certifications', code: 'CRT', name: 'CREDENTIALS', position: [-6.0, 0.5, 2.0], color: '#00e5d8', accent: '#00fff7', ventColor: '#00e5d8' },
+  { id: 'contact', code: 'COM', name: 'CONTACT', position: [-2.0, -2.5, -5.0], color: '#00fff7', accent: '#4efef7', ventColor: '#00e5d8' },
 ];
 
-interface FloatingNodesProps {
-  activeSection: string;
-  onSelectNode: (nodeId: string) => void;
-  hoveredNode: string | null;
-  setHoveredNode: (node: string | null) => void;
-}
+const PARTICLE_COUNT = 36;
 
 function SingleNode({
   node,
   isActive,
-  _isHovered,
   onSelect,
   onHover,
 }: {
   node: NodeConfig;
   isActive: boolean;
-  _isHovered: boolean;
   onSelect: () => void;
   onHover: (hovered: boolean) => void;
 }) {
-  const meshRef = useRef<THREE.Mesh>(null);
+  const beaconRef = useRef<THREE.Mesh>(null);
+  const ventRef = useRef<THREE.Group>(null);
+  const plumeRef = useRef<THREE.Points>(null);
   const ringRef = useRef<THREE.Mesh>(null);
   const [localHover, setLocalHover] = useState(false);
+  const { clock } = useThree();
+
+  const ventGeometry = useMemo(() => {
+    const geometry = new THREE.BufferGeometry();
+    const positions = new Float32Array(PARTICLE_COUNT * 3);
+    const speeds = new Float32Array(PARTICLE_COUNT);
+    const phases = new Float32Array(PARTICLE_COUNT);
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      positions[i * 3] = THREE.MathUtils.randFloatSpread(0.24);
+      positions[i * 3 + 1] = THREE.MathUtils.randFloat(0, 2.2);
+      positions[i * 3 + 2] = THREE.MathUtils.randFloatSpread(0.24);
+      speeds[i] = THREE.MathUtils.randFloat(0.25, 0.7);
+      phases[i] = THREE.MathUtils.randFloat(0, Math.PI * 2);
+    }
+
+    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geometry.setAttribute('speed', new THREE.BufferAttribute(speeds, 1));
+    geometry.setAttribute('phase', new THREE.BufferAttribute(phases, 1));
+    return geometry;
+  }, []);
+
+  const ventMaterial = useMemo(
+    () =>
+      new THREE.PointsMaterial({
+        color: new THREE.Color(node.ventColor),
+        size: 0.09,
+        transparent: true,
+        opacity: 0.55,
+        sizeAttenuation: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    [node.ventColor]
+  );
+
+  const chimneyGeometry = useMemo(() => new THREE.CylinderGeometry(0.14, 0.28, 2.4, 8, 1, true), []);
+  const chimneyMaterial = useMemo(
+    () => new THREE.MeshStandardMaterial({ color: new THREE.Color('#12403f'), roughness: 0.95, metalness: 0.05 }),
+    []
+  );
+
+  const beaconGeometry = useMemo(() => new THREE.OctahedronGeometry(0.46, 1), []);
+  const beaconMaterial = useMemo(
+    () =>
+      new THREE.MeshPhysicalMaterial({
+        color: new THREE.Color(node.color),
+        emissive: new THREE.Color(node.color),
+        emissiveIntensity: 0.35,
+        metalness: 0.25,
+        roughness: 0.2,
+        clearcoat: 1,
+        clearcoatRoughness: 0.1,
+        transmission: 0.15,
+        thickness: 0.6,
+      }),
+    [node.color]
+  );
+
+  const ringGeometry = useMemo(() => new THREE.TorusGeometry(0.72, 0.012, 8, 40), []);
+  const ringMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color(node.accent),
+        transparent: true,
+        opacity: 0.35,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    [node.accent]
+  );
+
+  const glowMaterial = useMemo(
+    () =>
+      new THREE.MeshBasicMaterial({
+        color: new THREE.Color(node.ventColor),
+        transparent: true,
+        opacity: 0.32,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    [node.ventColor]
+  );
+
+  const linkGeometry = useMemo(() => {
+    const geometry = new THREE.BufferGeometry();
+    geometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(
+        new Float32Array([0, 0, 0, node.position[0] * 0.62, node.position[1] * 0.62, node.position[2] * 0.62]),
+        3
+      )
+    );
+    return geometry;
+  }, [node.position]);
+
+  const linkMaterial = useMemo(
+    () =>
+      new THREE.LineBasicMaterial({
+        color: new THREE.Color(node.color),
+        transparent: true,
+        opacity: 0.1,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      }),
+    [node.color]
+  );
+
+  // Built imperatively and mounted via <primitive> so the JSX `line`
+  // intrinsic does not collide with the SVG `line` element type.
+  const linkLine = useMemo(() => {
+    const line = new THREE.Line(linkGeometry, linkMaterial);
+    line.position.set(-node.position[0] * 0.38, -node.position[1] * 0.38, -node.position[2] * 0.38);
+    return line;
+  }, [linkGeometry, linkMaterial, node.position]);
 
   useFrame((state, delta) => {
-    const t = state.clock.getElapsedTime();
-    if (meshRef.current) {
-      meshRef.current.rotation.y += delta * (localHover ? 1.5 : 0.6);
-      meshRef.current.rotation.x = Math.sin(t * 0.8) * 0.2;
-      // Gentle floating bob
-      meshRef.current.position.y = Math.sin(t * 1.2 + node.position[0]) * 0.15;
+    const elapsed = clock.getElapsedTime();
+
+    if (beaconRef.current) {
+      beaconRef.current.rotation.y += delta * (localHover ? 1.1 : 0.45);
+      beaconRef.current.rotation.x = Math.sin(elapsed * 0.6) * 0.18;
+      const pulse = 1 + Math.sin(elapsed * 1.6) * 0.04;
+      beaconRef.current.scale.setScalar(pulse);
     }
+
     if (ringRef.current) {
-      ringRef.current.rotation.z += delta * 0.8;
-      ringRef.current.rotation.x += delta * 0.3;
+      ringRef.current.rotation.z = elapsed * 0.4;
+      ringRef.current.rotation.x = Math.PI / 2 + Math.sin(elapsed * 0.5) * 0.25;
     }
+
+    if (ventRef.current) {
+      ventRef.current.rotation.y = Math.sin(elapsed * 0.25) * 0.08;
+    }
+
+    if (plumeRef.current) {
+      const positions = plumeRef.current.geometry.getAttribute('position') as THREE.BufferAttribute;
+      const speeds = plumeRef.current.geometry.getAttribute('speed') as THREE.BufferAttribute;
+      const phases = plumeRef.current.geometry.getAttribute('phase') as THREE.BufferAttribute;
+      const array = positions.array as Float32Array;
+
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        const speed = speeds.getX(i);
+        array[i * 3 + 1] += delta * speed;
+
+        if (array[i * 3 + 1] > 2.6) {
+          array[i * 3] = THREE.MathUtils.randFloatSpread(0.24);
+          array[i * 3 + 1] = 0;
+          array[i * 3 + 2] = THREE.MathUtils.randFloatSpread(0.24);
+        }
+
+        array[i * 3] += Math.sin(elapsed * 1.2 + phases.getX(i)) * delta * 0.03;
+      }
+
+      positions.needsUpdate = true;
+    }
+
+    // static opacity — no mutation of memoized objects in useFrame
+    linkLine.material.opacity = isActive ? 0.34 : 0.08;
+
+    void state;
   });
-
-  const handlePointerOver = () => {
-    setLocalHover(true);
-    onHover(true);
-    soundFx.playHover();
-  };
-
-  const handlePointerOut = () => {
-    setLocalHover(false);
-    onHover(false);
-  };
-
-  const handleClick = (e: { stopPropagation: () => void }) => {
-    e.stopPropagation();
-    soundFx.playWarp();
-    onSelect();
-  };
-
-  const scale = localHover || isActive ? 1.3 : 1.0;
 
   return (
     <group position={node.position}>
-      {/* Interactive geometric beacon */}
+      <group ref={ventRef}>
+        <mesh geometry={chimneyGeometry} material={chimneyMaterial} position={[0, 1, 0]} />
+        <mesh material={glowMaterial} position={[0, 2.2, 0]}>
+          <sphereGeometry args={[0.34, 16, 16]} />
+        </mesh>
+        <points ref={plumeRef} geometry={ventGeometry} material={ventMaterial} />
+      </group>
+
       <mesh
-        ref={meshRef}
-        scale={scale}
-        onPointerOver={handlePointerOver}
-        onPointerOut={handlePointerOut}
-        onClick={handleClick}
-      >
-        <octahedronGeometry args={[0.55, 0]} />
-        <meshStandardMaterial
-          color={node.color}
-          emissive={node.color}
-          emissiveIntensity={localHover || isActive ? 0.9 : 0.4}
-          roughness={0.2}
-          metalness={0.8}
-          wireframe={!localHover && !isActive}
-        />
-      </mesh>
+        ref={beaconRef}
+        geometry={beaconGeometry}
+        material={beaconMaterial}
+        onPointerOver={(event) => {
+          event.stopPropagation();
+          setLocalHover(true);
+          onHover(true);
+          soundFx.playHover();
+        }}
+        onPointerOut={() => {
+          setLocalHover(false);
+          onHover(false);
+        }}
+        onClick={(event) => {
+          event.stopPropagation();
+          onSelect();
+          soundFx.playClick();
+        }}
+      />
 
-      {/* Orbiting wire ring around beacon */}
-      <mesh ref={ringRef} scale={scale * 1.2}>
-        <torusGeometry args={[0.85, 0.015, 8, 32]} />
-        <meshBasicMaterial
-          color={node.color}
-          transparent
-          opacity={localHover || isActive ? 0.8 : 0.3}
-        />
-      </mesh>
+      <mesh ref={ringRef} geometry={ringGeometry} material={ringMaterial} />
 
-      {/* Connecting ray toward center */}
-      <line>
-        <bufferGeometry>
-          <bufferAttribute
-            attach="attributes-position"
-            args={[new Float32Array([0, 0, 0, -node.position[0], -node.position[1], -node.position[2]]), 3]}
-          />
-        </bufferGeometry>
-        <lineBasicMaterial
-          color={node.color}
-          transparent
-          opacity={localHover || isActive ? 0.35 : 0.08}
-        />
-      </line>
+      <primitive object={linkLine} />
 
-      {/* Futuristic 3D Billboard Badge */}
-      <Html position={[0, -0.9, 0]} center distanceFactor={14}>
-        <div
-          onClick={handleClick}
-          onMouseEnter={handlePointerOver}
-          onMouseLeave={handlePointerOut}
-          className={`cursor-pointer group flex flex-col items-center select-none transition-all duration-300 transform ${
-            localHover || isActive ? 'scale-110 -translate-y-1' : 'opacity-85'
-          }`}
+      <Html center position={[0, -1.25, 0]} style={{ pointerEvents: 'none', userSelect: 'none' }}>
+        <span
+          className="font-mono text-[9px] font-semibold uppercase tracking-[0.18em]"
+          style={{ color: node.color, textShadow: `0 0 8px ${node.color}80` }}
         >
-          <div
-            className="px-2.5 py-1 rounded-md text-[11px] font-mono tracking-wider font-semibold border backdrop-blur-md whitespace-nowrap flex items-center gap-1.5 shadow-xl transition-all"
-            style={{
-              backgroundColor: 'rgba(5, 10, 20, 0.85)',
-              borderColor: localHover || isActive ? node.color : 'rgba(255, 255, 255, 0.12)',
-              color: localHover || isActive ? '#ffffff' : '#94a3b8',
-              boxShadow: localHover || isActive ? `0 0 20px ${node.accent}` : 'none',
-            }}
-          >
-            <span
-              className="w-1.5 h-1.5 rounded-full"
-              style={{
-                backgroundColor: node.color,
-                boxShadow: `0 0 8px ${node.color}`,
-              }}
-            />
-            <span className="text-[9px] text-slate-400">[{node.code}]</span>
-            <span>{node.name}</span>
-          </div>
-
-          {(localHover || isActive) && (
-            <div className="mt-1 px-2 py-0.5 rounded text-[8px] font-mono tracking-widest text-cyan-300 bg-cyan-950/80 border border-cyan-500/30 uppercase animate-bounce">
-              EXPLORE NODE →
-            </div>
-          )}
-        </div>
+          {node.code}
+        </span>
       </Html>
     </group>
   );
@@ -221,9 +259,12 @@ function SingleNode({
 export function FloatingNodes({
   activeSection,
   onSelectNode,
-  hoveredNode,
   setHoveredNode,
-}: FloatingNodesProps) {
+}: {
+  activeSection: string;
+  onSelectNode: (nodeId: string) => void;
+  setHoveredNode: (node: string | null) => void;
+}) {
   return (
     <group>
       {NODES_CONFIG.map((node) => (
@@ -231,7 +272,6 @@ export function FloatingNodes({
           key={node.id}
           node={node}
           isActive={activeSection === node.id}
-          _isHovered={hoveredNode === node.name}
           onSelect={() => onSelectNode(node.id)}
           onHover={(hovered) => setHoveredNode(hovered ? node.name : null)}
         />

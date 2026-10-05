@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 
 // Critical path UI — loaded immediately
@@ -14,160 +14,213 @@ import { AchievementsSection } from '@/components/sections/AchievementsSection';
 import { CertificationsSection } from '@/components/sections/CertificationsSection';
 import { ContactSection } from '@/components/sections/ContactSection';
 
-// Navigation
-import { FloatingNav } from '@/components/navigation/FloatingNav';
-
-// HUD UI components
-import { HudOverlay } from '@/components/ui/HudOverlay';
-import { CustomCursor } from '@/components/ui/CustomCursor';
+// Navigation + overlays
+import { DiveNav } from '@/components/navigation/DiveNav';
+import { DepthMeter } from '@/components/ui/DepthMeter';
+import { OceanMap } from '@/components/ui/OceanMap';
 import { TerminalConsole } from '@/components/ui/TerminalConsole';
-import { SystemMap } from '@/components/ui/SystemMap';
 
-// 3D Scene — dynamically imported to avoid SSR issues with WebGL
+import { DEPTH_ZONES, SECTION_ORDER, getZone, type DepthZone, type SectionId } from '@/lib/depthZones';
+
+// The ocean is client-only — R3F cannot render on the server.
 const SceneCanvas = dynamic(
-  () => import('@/components/3d/SceneCanvas').then(m => m.SceneCanvas),
+  () => import('@/components/3d/SceneCanvas').then((m) => m.SceneCanvas),
   { ssr: false, loading: () => null }
 );
-
-type SectionId = 'home' | 'about' | 'skills' | 'projects' | 'experience' | 'achievements' | 'certifications' | 'contact';
-
-const SECTIONS: SectionId[] = ['home', 'about', 'skills', 'projects', 'experience', 'achievements', 'certifications', 'contact'];
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeSection, setActiveSection] = useState<SectionId>('home');
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [zone, setZone] = useState<DepthZone>(getZone('home'));
+  const [progress, setProgress] = useState(0);
   const [isTerminalOpen, setIsTerminalOpen] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
 
-  // Global CTRL+K shortcut
+  // Ref mirrors the scroll progress so the render loop can read it without
+  // re-rendering the React tree on every scroll event.
+  const progressRef = useRef(0);
+
+  // ---- Scroll → dive progress ----------------------------------------------
+  // Progress is driven by which section owns the viewport rather than raw
+  // scroll height, so the camera arrives at a zone exactly when the visitor
+  // does — no teleporting, no arriving early or late.
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.key === 'k') {
-        e.preventDefault();
-        setIsTerminalOpen(prev => !prev);
+    let frame = 0;
+
+    const measure = () => {
+      frame = 0;
+      const viewportCentre = window.innerHeight * 0.5;
+
+      let bestId: SectionId = 'home';
+      let bestDistance = Number.POSITIVE_INFINITY;
+      let found = false;
+
+      for (const id of SECTION_ORDER) {
+        const el = document.getElementById(`section-${id}`);
+        if (!el) continue;
+
+        const rect = el.getBoundingClientRect();
+        if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
+
+        found = true;
+        const distance = Math.abs(rect.top + rect.height / 2 - viewportCentre);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          bestId = id;
+        }
+      }
+
+      if (found) {
+        setActiveSection((current) => (current === bestId ? current : bestId));
+
+        const index = SECTION_ORDER.indexOf(bestId);
+
+        // Blend between this zone and the next across the lower half of the
+        // section so the descent starts as the visitor begins scrolling on.
+        const el = document.getElementById(`section-${bestId}`);
+        let local = 0;
+        if (el && index < SECTION_ORDER.length - 1) {
+          const rect = el.getBoundingClientRect();
+          const total = Math.max(rect.height, 1);
+          local = Math.min(Math.max((rect.top + rect.height * 0.75 - window.innerHeight) / total, 0), 1);
+        }
+
+        const segments = SECTION_ORDER.length - 1;
+        const value = (index + local) / segments;
+        progressRef.current = value;
+        setProgress(value);
       }
     };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(measure);
+    };
+
+    measure();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
   }, []);
 
-  // Intersection observer to update active section on scroll
-  useEffect(() => {
-    if (isLoading) return;
+  // ---- Navigation ----------------------------------------------------------
+  const navigateTo = useCallback((section: string) => {
+    const id = (SECTION_ORDER as string[]).includes(section) ? (section as SectionId) : 'home';
+    setActiveSection(id);
 
-    const observers: IntersectionObserver[] = [];
-
-    SECTIONS.forEach(sectionId => {
-      const el = document.getElementById(`section-${sectionId}`);
-      if (!el) return;
-
-      const observer = new IntersectionObserver(
-        ([entry]) => {
-          if (entry.isIntersecting) {
-            setActiveSection(sectionId);
-          }
-        },
-        { threshold: 0.3 }
-      );
-      observer.observe(el);
-      observers.push(observer);
-    });
-
-    return () => observers.forEach(obs => obs.disconnect());
-  }, [isLoading]);
-
-  const navigateTo = useCallback((sectionId: string) => {
-    setActiveSection(sectionId as SectionId);
-    const el = document.getElementById(`section-${sectionId}`);
+    const el = document.getElementById(`section-${id}`);
     if (el) {
       el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   }, []);
 
-  const handleLoadComplete = useCallback(() => {
-    setIsLoading(false);
-  }, []);
+  const handleLoadComplete = useCallback(() => setIsLoading(false), []);
 
-  const openResume = useCallback(() => {
-    window.open('/resume.pdf', '_blank');
-  }, []);
+  const surfaceUp = useCallback(() => {
+    navigateTo('home');
+  }, [navigateTo]);
 
   return (
     <>
-      {/* Custom cursor — desktop only */}
-      <CustomCursor />
+      {/* Cinematic descent into the water */}
+      {isLoading && <LoadingScreen onComplete={handleLoadComplete} />}
 
-      {/* Loading Screen */}
-      {isLoading && (
-        <LoadingScreen onComplete={handleLoadComplete} />
-      )}
+      <div inert={isLoading ? true : undefined}>
+        {/* The ocean. Mounted once and never unmounted. */}
+        <SceneCanvas
+          progress={progress}
+          onSelectPearl={surfaceUp}
+          onZoneChange={setZone}
+        />
 
-      {!isLoading && (
-        <>
-          {/* 3D Background Canvas — Fixed */}
-          <SceneCanvas
-            activeSection={activeSection}
-            onSelectNode={navigateTo}
-            hoveredNode={hoveredNode}
-            setHoveredNode={setHoveredNode}
-          />
+        {/* Expedition interface */}
+        <DepthMeter zone={zone} progress={progress} />
+        <DiveNav activeSection={activeSection} onNavigate={navigateTo} />
 
-          {/* HUD Telemetry Overlay */}
-          <HudOverlay
-            activeSection={activeSection}
-            onOpenMap={() => setIsMapOpen(true)}
-            onOpenTerminal={() => setIsTerminalOpen(true)}
-            onOpenResume={openResume}
-          />
+        {/* Scrollable content — the only real DOM content, kept fully readable */}
+        <main id="main-content" className="relative z-10">
+          <div className="pointer-events-none">
+            <HeroSection onNavigate={navigateTo} />
+            <AboutSection />
+            <SkillsSection />
+            <ProjectsSection />
+            <ExperienceSection />
+            <AchievementsSection />
+            <CertificationsSection />
+            <ContactSection />
+          </div>
+        </main>
 
-          {/* Floating Navigation */}
-          <FloatingNav activeSection={activeSection} onNavigate={navigateTo} />
+        <TerminalConsole
+          isOpen={isTerminalOpen}
+          onClose={() => setIsTerminalOpen(false)}
+          onNavigate={(section) => {
+            navigateTo(section);
+            setIsTerminalOpen(false);
+          }}
+        />
 
-          {/* Scrollable Content Pane */}
-          <main
-            id="main-content"
-            className="relative z-10 pointer-events-none"
-            style={{ background: 'transparent' }}
-          >
-            {/* Thin dark gradient edge at very top to softly separate HUD */}
-            <div className="fixed top-0 left-0 right-0 h-20 bg-gradient-to-b from-[#04060a]/70 to-transparent z-20 pointer-events-none" />
-            {/* Bottom vignette */}
-            <div className="fixed bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#04060a]/60 to-transparent z-20 pointer-events-none" />
+        <OceanMap
+          isOpen={isMapOpen}
+          onClose={() => setIsMapOpen(false)}
+          activeSection={activeSection}
+          zone={zone}
+          onNavigate={navigateTo}
+        />
+      </div>
 
-            <div className="pointer-events-auto">
-              <HeroSection onNavigate={navigateTo} />
-              <AboutSection />
-              <SkillsSection />
-              <ProjectsSection />
-              <ExperienceSection />
-              <AchievementsSection />
-              <CertificationsSection />
-              <ContactSection />
-            </div>
-          </main>
+      {/* Keyboard shortcuts, mounted outside `inert` so they always work. */}
+      <GlobalShortcuts
+        onToggleTerminal={() => setIsTerminalOpen((open) => !open)}
+        onToggleMap={() => setIsMapOpen((open) => !open)}
+      />
 
-          {/* Terminal Console Overlay */}
-          <TerminalConsole
-            isOpen={isTerminalOpen}
-            onClose={() => setIsTerminalOpen(false)}
-            onNavigate={(section) => {
-              navigateTo(section);
-              setIsTerminalOpen(false);
-            }}
-          />
-
-          {/* System Map */}
-          <SystemMap
-            isOpen={isMapOpen}
-            onClose={() => setIsMapOpen(false)}
-            activeSection={activeSection}
-            onNavigate={(section) => {
-              navigateTo(section);
-            }}
-          />
-        </>
-      )}
+      {/* Zone list kept in the module graph so the map and nav agree on order. */}
+      <span className="sr-only" aria-live="polite">
+        {zone.zone}, {zone.depth} metres
+      </span>
+      <span className="sr-only">{DEPTH_ZONES.length}</span>
     </>
   );
+}
+
+function GlobalShortcuts({
+  onToggleTerminal,
+  onToggleMap,
+}: {
+  onToggleTerminal: () => void;
+  onToggleMap: () => void;
+}) {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      const typing =
+        target &&
+        (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable);
+
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        onToggleTerminal();
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'm') {
+        event.preventDefault();
+        onToggleMap();
+        return;
+      }
+      if (event.key === 'Escape' && !typing) {
+        onToggleMap();
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [onToggleTerminal, onToggleMap]);
+
+  return null;
 }

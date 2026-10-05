@@ -1,20 +1,28 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { CentralCore } from './CentralCore';
-import { FloatingNodes } from './FloatingNodes';
-import { ParticleField } from './ParticleField';
-import { CameraRig } from './CameraRig';
+import { OceanSurface } from './OceanSurface';
+import { LightShafts } from './LightShafts';
+import { Seafloor } from './Seafloor';
+import { MarineSnow } from './MarineSnow';
+import { SeaLife } from './SeaLife';
+import { ThePearl } from './ThePearl';
+import { TheFacility } from './TheFacility';
+import { TheWreck } from './TheWreck';
+import { TreasureReef } from './TreasureReef';
+import { TheArchive } from './TheArchive';
+import { TheBeacon } from './TheBeacon';
+import { DiveRig } from './DiveRig';
+import type { DepthZone } from '@/lib/depthZones';
 
 interface SceneCanvasProps {
-  activeSection: string;
-  onSelectNode: (nodeId: string) => void;
-  hoveredNode: string | null;
-  setHoveredNode: (node: string | null) => void;
+  /** 0..1 scroll progress through the document. */
+  progress: number;
+  onSelectPearl?: () => void;
+  onZoneChange?: (zone: DepthZone) => void;
 }
 
-// Lazy initializers to avoid setState in effect
 function checkWebGL(): boolean {
   if (typeof window === 'undefined') return true;
   try {
@@ -37,89 +45,75 @@ function checkReducedMotion(): boolean {
 }
 
 export function SceneCanvas({
-  activeSection,
-  onSelectNode,
-  hoveredNode,
-  setHoveredNode,
+  progress,
+  onSelectPearl,
+  onZoneChange,
 }: SceneCanvasProps) {
   const [hasWebGL] = useState<boolean>(checkWebGL);
   const [isMobile, setIsMobile] = useState<boolean>(checkMobile);
   const [isReducedMotion, setIsReducedMotion] = useState<boolean>(checkReducedMotion);
 
   useEffect(() => {
-    // Check Mobile
-    const checkMobileResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    window.addEventListener('resize', checkMobileResize);
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', onResize);
 
-    // Check Reduced Motion
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const handleMotionChange = (e: MediaQueryListEvent) => setIsReducedMotion(e.matches);
-    mediaQuery.addEventListener('change', handleMotionChange);
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const onMotionChange = (e: MediaQueryListEvent) => setIsReducedMotion(e.matches);
+    media.addEventListener('change', onMotionChange);
 
     return () => {
-      window.removeEventListener('resize', checkMobileResize);
-      mediaQuery.removeEventListener('change', handleMotionChange);
+      window.removeEventListener('resize', onResize);
+      media.removeEventListener('change', onMotionChange);
     };
   }, []);
 
   if (!hasWebGL) {
-    // Elegant 2D Fallback if WebGL is disabled or unsupported
     return (
-      <div className="absolute inset-0 z-0 overflow-hidden bg-[#04060a] bg-tech-grid flex items-center justify-center pointer-events-none">
-        <div className="absolute w-[500px] h-[500px] rounded-full bg-cyan-500/10 blur-[100px] animate-pulse" />
-        <div className="absolute w-[350px] h-[350px] rounded-full bg-blue-600/10 blur-[80px]" />
-        
-        {/* Central Core Fallback Emblem */}
-        <div className="relative z-10 flex flex-col items-center">
-          <div className="w-48 h-48 rounded-full border border-cyan-500/30 flex items-center justify-center p-4 relative">
-            <div className="w-36 h-36 rounded-full border border-dashed border-cyan-400/40 animate-spin" style={{ animationDuration: '30s' }} />
-            <div className="absolute w-20 h-20 rounded-full bg-cyan-950/80 border border-cyan-400 flex items-center justify-center">
-              <span className="font-mono text-xs text-cyan-300 font-bold">CORE-00</span>
-            </div>
-          </div>
-          <p className="font-mono text-xs text-slate-400 mt-4 tracking-widest uppercase">
-            2D SYSTEM MODE ACTIVE
-          </p>
-        </div>
+      <div className="fixed inset-0 z-0 bg-ocean-deep" aria-hidden="true">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,#124a5e_0%,#04121f_55%,#01070d_100%)]" />
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-auto">
+    <div className="fixed inset-0 z-0" aria-hidden="true">
       <Canvas
-        camera={{ position: [0, 0, 7.5], fov: 45, near: 0.1, far: 100 }}
-        dpr={[1, 1.5]}
+        camera={{ position: [0, 9.5, 12], fov: 55, near: 0.1, far: 400 }}
+        dpr={isMobile ? [1, 1.35] : [1, 1.75]}
         gl={{
-          antialias: true,
+          antialias: !isMobile,
           powerPreference: 'high-performance',
-          alpha: true,
+          alpha: false,
+          stencil: false,
+          depth: true,
         }}
       >
         <Suspense fallback={null}>
-          {/* Atmospheric Lighting */}
-          <fog attach="fog" args={['#04060a', 6, 26]} />
-          <ambientLight intensity={0.5} />
-          <pointLight position={[0, 0, 0]} color="#00f0ff" intensity={4} distance={12} />
-          <directionalLight position={[10, 10, 5]} color="#38bdf8" intensity={0.8} />
-          <directionalLight position={[-10, -10, -5]} color="#818cf8" intensity={0.6} />
+          {/* The dive: camera, fog and all three lights come from here. */}
+          <DiveRig
+            progress={progress}
+            isReducedMotion={isReducedMotion}
+            onZoneChange={onZoneChange}
+          />
 
-          {/* Core Universe Entities */}
-          <CentralCore
-            hoveredNode={hoveredNode}
-            setHoveredNode={setHoveredNode}
-            onNodeClick={onSelectNode}
-          />
-          <FloatingNodes
-            activeSection={activeSection}
-            onSelectNode={onSelectNode}
-            hoveredNode={hoveredNode}
-            setHoveredNode={setHoveredNode}
-          />
-          <ParticleField isMobile={isMobile} />
-          <CameraRig activeSection={activeSection} isReducedMotion={isReducedMotion} />
+          {/* Surface and the light coming through it. */}
+          <OceanSurface isMobile={isMobile} />
+          <LightShafts isMobile={isMobile} />
+
+          {/* The world itself. */}
+          <Seafloor isMobile={isMobile} />
+
+          {/* Section environments, spread across the descent. */}
+          <ThePearl onSelect={onSelectPearl} />
+          <TheFacility isMobile={isMobile} />
+          <TheWreck isMobile={isMobile} />
+          <TreasureReef isMobile={isMobile} />
+          <TheArchive isMobile={isMobile} />
+          <TheBeacon isMobile={isMobile} />
+
+          {/* Life and particulate. */}
+          <SeaLife isMobile={isMobile} />
+          <MarineSnow isMobile={isMobile} count={isMobile ? 900 : 2400} />
         </Suspense>
       </Canvas>
     </div>

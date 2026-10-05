@@ -1,109 +1,127 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
 interface LoadingScreenProps {
   onComplete: () => void;
 }
 
+const DESCENT_STEPS = [
+  'SEALING THE DIVE HATCH',
+  'FILLING BALLAST',
+  'PASSING THE SUNLIT SURFACE',
+  'ENTERING THE SHALLOW REEF',
+  'DESCENDING THROUGH THE CAVE',
+  'APPROACHING THE FACILITY',
+  'LOST SIGNAL · CONTINUING',
+];
+
+/**
+ * LoadingScreen — the descent itself.
+ *
+ * Deliberately short and skippable. It reports a real descent rather than an
+ * arbitrary progress bar, so the loading state already teaches the interaction
+ * the visitor is about to have.
+ */
 export function LoadingScreen({ onComplete }: LoadingScreenProps) {
   const [progress, setProgress] = useState(0);
-  const [currentStep, setCurrentStep] = useState("INITIALIZING 3D ENVIRONMENT...");
-  const [visible, setVisible] = useState(true);
+  const [step, setStep] = useState(DESCENT_STEPS[0]!);
+  const [fading, setFading] = useState(false);
 
   useEffect(() => {
-    const steps = [
-      { at: 20, label: "CALIBRATING GEOMETRY MATRICES..." },
-      { at: 45, label: "BOOTING EVENT-DRIVEN GRAPHICS ENGINE..." },
-      { at: 70, label: "SPAWNING ORBITAL TELEMETRY NODES..." },
-      { at: 92, label: "SYNCHRONIZING DIGITAL CORE..." },
-      { at: 100, label: "SYSTEM READY // WELCOME" },
-    ];
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, []);
 
-    const timer = setInterval(() => {
+  useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const tick = reduced ? 24 : 38;
+    const increment = reduced ? 16 : 9;
+
+    const timer = window.setInterval(() => {
       setProgress((prev) => {
-        const next = prev + Math.floor(Math.random() * 8) + 4;
-        if (next >= 100) {
-          clearInterval(timer);
-          setTimeout(() => {
-            setVisible(false);
-            setTimeout(() => onComplete(), 300);
-          }, 350);
-          return 100;
-        }
+        const next = Math.min(prev + Math.random() * increment + increment * 0.4, 100);
 
-        const match = steps.find((s) => next >= s.at && prev < s.at);
-        if (match) {
-          setCurrentStep(match.label);
+        const stepIndex = Math.min(
+          Math.floor((next / 100) * DESCENT_STEPS.length),
+          DESCENT_STEPS.length - 1
+        );
+        setStep(DESCENT_STEPS[stepIndex]!);
+
+        if (next >= 100) {
+          window.clearInterval(timer);
+          window.setTimeout(() => setFading(true), reduced ? 80 : 320);
         }
 
         return next;
       });
-    }, 45);
+    }, tick);
 
-    return () => clearInterval(timer);
-  }, [onComplete]);
+    return () => window.clearInterval(timer);
+  }, []);
 
-  if (!visible) return null;
-
-  // Generate ASCII block progress bar [████████░░░░░]
-  const totalBlocks = 20;
-  const filledBlocks = Math.round((progress / 100) * totalBlocks);
-  const asciiBar = '█'.repeat(filledBlocks) + '░'.repeat(totalBlocks - filledBlocks);
+  const finish = () => {
+    if (fading) onComplete();
+  };
 
   return (
     <motion.div
+      role="status"
+      aria-live="polite"
+      aria-label="Descending into the deep ocean"
       initial={{ opacity: 1 }}
-      className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#030509] text-white select-none px-6"
+      animate={{ opacity: fading ? 0 : 1 }}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      onAnimationComplete={finish}
+      onClick={() => setFading(true)}
+      className="fixed inset-0 z-50 flex cursor-pointer flex-col items-center justify-center bg-[#020c14] px-6 text-[#d6f7f4]"
     >
-      {/* Ambient background glow */}
-      <div className="absolute w-[450px] h-[450px] rounded-full bg-cyan-500/10 blur-[120px] pointer-events-none" />
+      {/* Light from the surface, still visible above at this depth */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-1/2 bg-[radial-gradient(ellipse_at_50%_0%,rgba(26,92,116,0.55)_0%,transparent_70%)]"
+      />
 
-      <div className="relative z-10 max-w-lg w-full flex flex-col items-center text-center">
-        {/* Header Monogram / Title */}
-        <div className="flex items-center gap-2 mb-3">
-          <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-          <span className="font-mono text-[11px] tracking-[0.25em] text-cyan-400 uppercase">
-            BLANI JOYSTAN DCUNHA // DIGITAL SYSTEM
+      <div className="relative w-full max-w-sm">
+        <p className="mb-3 text-center font-mono text-[10px] tracking-[0.34em] text-[#6fa9b0] uppercase">
+          Blani — The Deep
+        </p>
+
+        <h1 className="mb-10 text-center text-2xl font-light tracking-[0.18em] text-[#f2fbfa] uppercase sm:text-3xl">
+          Descending
+        </h1>
+
+        {/* Depth readout counts down as the bar fills */}
+        <div className="mb-3 flex items-end justify-between">
+          <span className="font-mono text-[10px] tracking-[0.2em] text-[#6fa9b0]/80 uppercase">
+            {step}
+          </span>
+          <span className="font-mono text-xl font-light tabular-nums text-[#cfe9e6]">
+            {Math.round(progress * 8.9)}
+            <span className="ml-0.5 text-[11px] text-[#6fa9b0]">M</span>
           </span>
         </div>
 
-        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-white mb-6">
-          DIGITAL LAB & EXPLORATION CORE
-        </h1>
-
-        {/* ASCII Progress Bar Box */}
-        <div className="w-full bg-[#080d1a] border border-cyan-500/30 rounded-lg p-5 font-mono shadow-2xl shadow-cyan-950/40">
-          <div className="flex justify-between items-center text-xs text-slate-400 mb-2">
-            <span className="text-cyan-300 font-semibold">{currentStep}</span>
-            <span className="text-cyan-400 font-bold">{progress}%</span>
-          </div>
-
-          {/* ASCII bar rendering */}
-          <div className="text-cyan-400 font-mono text-sm tracking-wider my-2 font-bold select-none overflow-hidden text-center">
-            [{asciiBar}]
-          </div>
-
-          {/* Micro visual progress line */}
-          <div className="w-full h-1 bg-slate-800 rounded-full overflow-hidden mt-3">
-            <motion.div
-              className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-
-          <div className="mt-4 pt-3 border-t border-white/5 flex justify-between items-center text-[10px] text-slate-400">
-            <span>ENVIRONMENT: PROD-UNIVERSE</span>
-            <span>ARCHITECTURE: 3D-R3F-NEXT15</span>
-            <span>STATUS: ONLINE</span>
-          </div>
+        {/* Descent bar */}
+        <div className="h-px w-full overflow-hidden bg-[#123444]">
+          <motion.div
+            className="h-px bg-gradient-to-r from-[#2f7d8a] via-[#8fd8d4] to-[#d6f7f4]"
+            style={{ width: `${progress}%` }}
+          />
         </div>
 
-        <div className="mt-6 font-mono text-xs text-slate-400 flex items-center gap-2">
-          <span className="inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" />
-          <span>PRESS ANYWHERE TO SKIP OR WAIT FOR AUTO-CALIBRATION</span>
+        <div className="mt-3 flex justify-between font-mono text-[9px] tracking-[0.18em] text-[#3f7078] uppercase">
+          <span>Surface · 0 M</span>
+          <span>Abyss · 890 M</span>
         </div>
+
+        <p className="mt-10 text-center font-mono text-[9px] tracking-[0.24em] text-[#3f7078] uppercase">
+          Click to skip
+        </p>
       </div>
     </motion.div>
   );

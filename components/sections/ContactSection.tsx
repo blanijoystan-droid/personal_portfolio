@@ -2,310 +2,235 @@
 
 import React, { useRef, useState } from 'react';
 import { motion, useInView, type Variants } from 'framer-motion';
-import { GitBranch, Link2, Mail, Send, FileText, Download } from 'lucide-react';
+import { Mail, Link2, GitBranch, Terminal, Waves } from 'lucide-react';
 import { PERSONAL_INFO } from '@/data/portfolioData';
-import { soundFx } from '@/lib/soundEffects';
+import { ZoneHeading } from './AboutSection';
 
-const fadeUp: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (d = 0) => ({ opacity: 1, y: 0, transition: { duration: 0.6, delay: d, ease: [0.22, 1, 0.36, 1] as const } }),
+const rise: Variants = {
+  hidden: { opacity: 0, y: 26 },
+  visible: (d = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 1.3, delay: d, ease: [0.22, 1, 0.36, 1] as const },
+  }),
 };
 
 export function ContactSection() {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once: true, margin: '-80px' });
-
-  const [form, setForm] = useState({ name: '', email: '', message: '' });
-  const [submitted, setSubmitted] = useState(false);
-  const [sending, setSending] = useState(false);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
-  };
+  const isInView = useInView(ref, { once: true, margin: '-120px' });
+  const [formState, setFormState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [formData, setFormData] = useState({ name: '', email: '', message: '' });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    soundFx.playWarp();
-    setSending(true);
-
-    // Simulated send (replace with actual API call such as Resend / Formspree)
-    await new Promise(r => setTimeout(r, 1200));
-    setSending(false);
-    setSubmitted(true);
-    setForm({ name: '', email: '', message: '' });
+    setFormState('sending');
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    setFormState('sent');
+    setFormData({ name: '', email: '', message: '' });
+    setTimeout(() => setFormState('idle'), 3000);
   };
-
-  const socials = [
-    {
-      icon: GitBranch,
-      label: 'GITHUB',
-      href: PERSONAL_INFO.socials.github,
-      desc: 'Engineering projects & source code',
-      color: '#94a3b8',
-    },
-    {
-      icon: Link2,
-      label: 'LINKEDIN',
-      href: PERSONAL_INFO.socials.linkedin,
-      desc: 'Professional network & career profile',
-      color: '#3b82f6',
-    },
-    {
-      icon: Mail,
-      label: 'EMAIL',
-      href: `mailto:${PERSONAL_INFO.socials.email}`,
-      desc: PERSONAL_INFO.socials.email,
-      color: '#00f0ff',
-    },
-  ];
 
   return (
     <section
-      id="section-contact"
       ref={ref}
-      aria-label="Contact"
-      className="relative min-h-screen flex flex-col justify-center px-6 py-24 max-w-5xl mx-auto"
+      id="section-contact"
+      className="deep-section relative px-6"
+      aria-labelledby="contact-heading"
     >
-      {/* Header */}
-      <motion.div custom={0} initial="hidden" animate={isInView ? 'visible' : 'hidden'} variants={fadeUp} className="flex items-center gap-3 mb-3">
-        <span className="w-6 h-px bg-cyan-400" />
-        <span className="font-mono text-[11px] tracking-widest text-cyan-400 uppercase">NODE: COM-07 // COMM GATEWAY</span>
-        <span className="w-6 h-px bg-cyan-400" />
-      </motion.div>
+      <div className="mx-auto max-w-4xl">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={rise} custom={0}
+        >
+          <ZoneHeading
+            id="contact-heading"
+            title="The Abyss"
+            subtitle="The deepest point · a signal in the dark"
+          />
+        </motion.div>
 
-      <motion.h2 custom={0.1} initial="hidden" animate={isInView ? 'visible' : 'hidden'} variants={fadeUp} className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-2">
-        LET&apos;S <span className="text-cyan-400">BUILD</span> SOMETHING.
-      </motion.h2>
-
-      <motion.p custom={0.2} initial="hidden" animate={isInView ? 'visible' : 'hidden'} variants={fadeUp} className="text-slate-400 text-sm mb-10 max-w-lg">
-        Have a project, opportunity, collaboration or idea worth exploring? Open a channel.
-      </motion.p>
-
-      <div className="grid md:grid-cols-2 gap-8">
-        {/* Left: Social Links + Resume */}
-        <div className="flex flex-col gap-5">
-          <motion.div custom={0.3} initial="hidden" animate={isInView ? 'visible' : 'hidden'} variants={fadeUp}>
-            <div className="font-mono text-[10px] text-slate-400 mb-3 tracking-wider uppercase">DIRECT CHANNELS</div>
-            <div className="flex flex-col gap-2.5">
-              {socials.map((s) => {
-                const Icon = s.icon;
-                return (
-                  <a
-                    key={s.label}
-                    href={s.href}
-                    target={s.label !== 'EMAIL' ? '_blank' : undefined}
-                    rel="noopener noreferrer"
-                    data-cursor="OPEN"
-                    className="flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group"
-                    style={{
-                      background: 'rgba(255, 255, 255, 0.03)',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                    }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLAnchorElement).style.borderColor = `${s.color}50`;
-                      (e.currentTarget as HTMLAnchorElement).style.background = `${s.color}0d`;
-                      soundFx.playHover();
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLAnchorElement).style.borderColor = 'rgba(255,255,255,0.08)';
-                      (e.currentTarget as HTMLAnchorElement).style.background = 'rgba(255,255,255,0.03)';
-                    }}
-                  >
-                    <div
-                      className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0"
-                      style={{ background: `${s.color}15`, border: `1px solid ${s.color}30` }}
-                    >
-                      <Icon className="w-4 h-4" style={{ color: s.color }} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-mono text-[10px] font-bold tracking-wider" style={{ color: s.color }}>
-                        {s.label}
-                      </div>
-                      <div className="text-[11px] text-slate-400 truncate">{s.desc}</div>
-                    </div>
-                    <span className="font-mono text-[9px] text-slate-500 group-hover:text-slate-300 transition-colors">→</span>
-                  </a>
-                );
-              })}
-            </div>
-          </motion.div>
-
-          {/* Resume Terminal */}
-          <motion.div custom={0.4} initial="hidden" animate={isInView ? 'visible' : 'hidden'} variants={fadeUp}>
-            <div className="font-mono text-[10px] text-slate-400 mb-3 tracking-wider uppercase">RESUME TERMINAL</div>
-            <div
-              className="rounded-xl p-4 flex flex-col gap-3"
-              style={{
-                background: 'rgba(16, 185, 129, 0.07)',
-                border: '1px solid rgba(16, 185, 129, 0.25)',
-              }}
-            >
-              <div className="font-mono text-[10px] text-emerald-300 flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                RESUME // HOLOGRAPHIC READER
-              </div>
-              <div className="font-mono text-[11px] text-slate-400">
-                {PERSONAL_INFO.resume.filename}
-              </div>
-              <div className="flex items-center gap-2">
-                <a
-                  href={PERSONAL_INFO.resume.viewUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  data-cursor="VIEW"
-                  className="flex items-center gap-2 px-3.5 py-2 rounded-lg font-mono text-[10px] font-bold tracking-wider transition-all"
-                  style={{
-                    background: 'rgba(16, 185, 129, 0.15)',
-                    border: '1px solid rgba(16, 185, 129, 0.35)',
-                    color: '#34d399',
-                  }}
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  VIEW RESUME
-                </a>
-                <a
-                  href={PERSONAL_INFO.resume.downloadUrl}
-                  download={PERSONAL_INFO.resume.filename}
-                  data-cursor="DOWNLOAD"
-                  className="flex items-center gap-2 px-3.5 py-2 rounded-lg font-mono text-[10px] font-bold tracking-wider transition-all text-slate-300"
-                  style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)' }}
-                >
-                  <Download className="w-3.5 h-3.5" />
-                  DOWNLOAD
-                </a>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Right: Contact Form */}
-        <motion.div custom={0.45} initial="hidden" animate={isInView ? 'visible' : 'hidden'} variants={fadeUp}>
-          <div
-            className="rounded-xl p-5"
-            style={{
-              background: 'rgba(0, 240, 255, 0.04)',
-              border: '1px solid rgba(0, 240, 255, 0.2)',
-            }}
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+          {/* Contact Info */}
+          <motion.div
+            initial="hidden"
+            animate={isInView ? 'visible' : 'hidden'}
+            variants={rise} custom={0.1}
           >
-            <div className="font-mono text-[10px] text-cyan-300 mb-4 flex items-center gap-2">
-              <Send className="w-3.5 h-3.5" />
-              OPEN TRANSMISSION CHANNEL
-            </div>
+            <div className="glass-deep h-full rounded-3xl p-8">
+              <h3 className="mb-6 flex items-center gap-2 text-white">
+                <Waves className="h-6 w-6 text-[#9ff2ec]" />
+                FREQUENCIES
+              </h3>
 
-            {submitted ? (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="flex flex-col items-center justify-center py-8 text-center gap-3"
-              >
-                <div className="w-12 h-12 rounded-full bg-emerald-500/15 border border-emerald-500/35 flex items-center justify-center">
-                  <Send className="w-5 h-5 text-emerald-400" />
+              <div className="space-y-5">
+                {[
+                  { icon: Mail, label: 'EMAIL', value: PERSONAL_INFO.socials.email, action: `mailto:${PERSONAL_INFO.socials.email}` },
+                  { icon: GitBranch, label: 'GITHUB', value: PERSONAL_INFO.socials.github, action: PERSONAL_INFO.socials.github },
+                  { icon: Link2, label: 'LINKEDIN', value: PERSONAL_INFO.socials.linkedin, action: PERSONAL_INFO.socials.linkedin },
+                ].map((contact, idx) => (
+                  <motion.a
+                    key={contact.label}
+                    href={contact.action}
+                    target={contact.action.startsWith('http') ? '_blank' : undefined}
+                    rel={contact.action.startsWith('http') ? 'noopener noreferrer' : undefined}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    whileHover={{ x: 4 }}
+                    className="glass-soft rounded-2xl p-5 group flex items-center gap-4 transition-all duration-200"
+                  >
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#0a2a34]/70 border border-[#9ff2ec]/15 group-hover:border-[#9ff2ec]/40 group-hover:bg-[#0e3a4a]/70 transition-all duration-300">
+                      <contact.icon className="w-6 h-6 text-[#8fd8d4] group-hover:text-[#9ff2ec]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="font-mono text-[10px] tracking-widest uppercase text-[#9ff2ec] block mb-1">{contact.label}</span>
+                      <span className="font-mono text-sm text-slate-200 truncate block">{contact.value}</span>
+                    </div>
+                    <motion.div
+                      whileHover={{ scale: 1.1 }}
+                      className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#9ff2ec]/10 group-hover:bg-[#9ff2ec]/30 transition-colors"
+                    >
+                      <Waves className="w-4 h-4 text-[#9ff2ec]" />
+                    </motion.div>
+                  </motion.a>
+                ))}
+              </div>
+
+              {/* Resume Terminal */}
+              <div className="mt-8 pt-6 border-t border-[#9ff2ec]/10">
+                <div className="flex items-center gap-2 text-[#9ff2ec] mb-4">
+                  <Terminal className="w-5 h-5" />
+                  <span className="font-mono text-[10px] tracking-widest uppercase">RESUME TERMINAL</span>
                 </div>
-                <div className="font-mono text-sm font-bold text-emerald-400">TRANSMISSION SENT</div>
-                <div className="text-xs text-slate-400">Your message has been received. I will respond shortly.</div>
-                <button
-                  onClick={() => setSubmitted(false)}
-                  className="mt-2 font-mono text-[10px] text-cyan-400 hover:text-cyan-300 transition-colors"
-                >
-                  SEND ANOTHER →
-                </button>
-              </motion.div>
-            ) : (
-              <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => { window.open('/resume.pdf', '_blank'); }}
+                    className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-full font-mono text-sm font-medium tracking-wider text-[#04161d] transition-all duration-500"
+                    style={{ background: 'linear-gradient(90deg, #9ff2ec, #4fd1d4, #00ffff)' }}
+                  >
+                    <span className="w-4 h-4" style={{ background: 'linear-gradient(90deg, #9ff2ec, #4fd1d4, #00ffff)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>VIEW RESUME</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      const link = document.createElement('a');
+                      link.href = '/resume.pdf';
+                      link.download = 'Blani_Joystan_Dcunha_Resume.pdf';
+                      link.click();
+                    }}
+                    className="flex-1 flex items-center justify-center gap-2 px-5 py-3 rounded-full font-mono text-sm font-medium tracking-wider text-[#9ff2ec] transition-all duration-500 glass-soft"
+                  >
+                    <span>DOWNLOAD</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Transmission Form */}
+          <motion.div
+            initial="hidden"
+            animate={isInView ? 'visible' : 'hidden'}
+            variants={rise} custom={0.1}
+          >
+            <div className="glass-deep rounded-3xl p-8 h-full">
+              <h3 className="mb-6 flex items-center gap-2 text-white">
+                <Waves className="w-6 h-6 text-[#9ff2ec]" />
+                TRANSMIT SIGNAL
+              </h3>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="font-mono text-[10px] text-slate-400 block mb-1.5 tracking-wider">NAME</label>
+                  <label htmlFor="name" className="block font-mono text-[9px] tracking-widest uppercase text-[#9ff2ec] mb-1.5">
+                    OPERATOR IDENTITY
+                  </label>
                   <input
                     type="text"
+                    id="name"
                     name="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="YOUR DESIGNATION"
+                    className="w-full glass px-4 py-2.5 rounded-lg font-mono text-sm bg-[#062a34]/50 border-[#9ff2ec]/20 focus:border-[#9ff2ec]/50 focus:ring-2 focus:ring-[#9ff2ec]/20 transition-all"
                     required
-                    value={form.name}
-                    onChange={handleChange}
-                    placeholder="ENTER YOUR NAME"
-                    className="w-full px-3.5 py-2.5 rounded-lg font-mono text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all"
-                    style={{
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                    }}
+                    disabled={formState !== 'idle'}
                   />
                 </div>
 
                 <div>
-                  <label className="font-mono text-[10px] text-slate-400 block mb-1.5 tracking-wider">EMAIL</label>
+                  <label htmlFor="email" className="block font-mono text-[9px] tracking-widest uppercase text-[#9ff2ec] mb-1.5">
+                    COMMS FREQUENCY
+                  </label>
                   <input
                     type="email"
+                    id="email"
                     name="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="secure@channel.com"
+                    className="w-full glass px-4 py-2.5 rounded-lg font-mono text-sm bg-[#062a34]/50 border-[#9ff2ec]/20 focus:border-[#9ff2ec]/50 focus:ring-2 focus:ring-[#9ff2ec]/20 transition-all"
                     required
-                    value={form.email}
-                    onChange={handleChange}
-                    placeholder="YOUR@EMAIL.COM"
-                    className="w-full px-3.5 py-2.5 rounded-lg font-mono text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 transition-all"
-                    style={{
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                    }}
+                    disabled={formState !== 'idle'}
                   />
                 </div>
 
                 <div>
-                  <label className="font-mono text-[10px] text-slate-400 block mb-1.5 tracking-wider">MESSAGE</label>
+                  <label htmlFor="message" className="block font-mono text-[9px] tracking-widest uppercase text-[#9ff2ec] mb-1.5">
+                    MESSAGE PAYLOAD
+                  </label>
                   <textarea
+                    id="message"
                     name="message"
-                    required
+                    value={formData.message}
+                    onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+                    placeholder="ENCODE YOUR MESSAGE..."
                     rows={4}
-                    value={form.message}
-                    onChange={handleChange}
-                    placeholder="PROJECT IDEA, OPPORTUNITY, OR COLLABORATION..."
-                    className="w-full px-3.5 py-2.5 rounded-lg font-mono text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50 resize-none transition-all"
-                    style={{
-                      background: 'rgba(255,255,255,0.04)',
-                      border: '1px solid rgba(255,255,255,0.1)',
-                    }}
+                    className="w-full glass px-4 py-2.5 rounded-lg font-mono text-sm bg-[#062a34]/50 border-[#9ff2ec]/20 focus:border-[#9ff2ec]/50 focus:ring-2 focus:ring-[#9ff2ec]/20 transition-all resize-none"
+                    required
+                    disabled={formState !== 'idle'}
                   />
                 </div>
 
                 <button
                   type="submit"
-                  disabled={sending}
-                  data-cursor="SEND"
-                  className="flex items-center justify-center gap-2 px-5 py-3 rounded-lg font-mono text-sm font-bold tracking-wider text-[#04060a] transition-all disabled:opacity-60"
-                  style={{
-                    background: sending ? '#334155' : 'linear-gradient(90deg, #00f0ff, #3b82f6)',
-                    color: sending ? '#94a3b8' : '#04060a',
-                  }}
+                  disabled={formState !== 'idle'}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-full font-mono text-sm font-bold tracking-wider text-[#04161d] transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'linear-gradient(90deg, #9ff2ec, #4fd1d4, #00ffff)' }}
                 >
-                  {sending ? (
-                    <>
-                      <div className="w-3.5 h-3.5 border-2 border-slate-400 border-t-transparent rounded-full animate-spin" />
-                      TRANSMITTING...
-                    </>
-                  ) : (
-                    <>
-                      <Send className="w-4 h-4" />
-                      SEND TRANSMISSION
-                    </>
+                  {formState === 'sending' && (
+                    <motion.span className="w-4 h-4 border-2 border-[#04161d]/30 border-t-[#04161d] rounded-full animate-spin" />
                   )}
+                  {formState === 'sending' ? 'ENCODING...' :
+                   formState === 'sent' ? (
+                     <>
+                       <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }}>
+                         ✓
+                       </motion.span>
+                       TRANSMISSION COMPLETE
+                     </>
+                   ) :
+                   formState === 'error' ? 'TRANSMISSION FAILED' : (
+                     <>
+                       <Waves className="w-4 h-4" />
+                       LAUNCH TRANSMISSION
+                     </>
+                   )}
                 </button>
-              </form>
-            )}
-          </div>
-        </motion.div>
-      </div>
 
-      {/* Footer */}
-      <motion.div
-        custom={0.6}
-        initial="hidden"
-        animate={isInView ? 'visible' : 'hidden'}
-        variants={fadeUp}
-        className="mt-16 pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-center"
-      >
-        <div className="font-mono text-[10px] text-slate-500 tracking-wider">
-          BLANI DIGITAL UNIVERSE // BUILD 2026.1
+                {formState === 'sent' && (
+                  <motion.p
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="text-center text-[#9ff2ec] font-mono text-sm mt-3"
+                  >
+                    Signal received. Awaiting response on secure channel.
+                  </motion.p>
+                )}
+              </form>
+            </div>
+          </motion.div>
         </div>
-        <div className="font-mono text-[10px] text-slate-500 tracking-wider">
-          Designed &amp; Engineered by <span className="text-cyan-400">Blani Joystan D&apos;Cunha</span>
-        </div>
-      </motion.div>
+      </div>
     </section>
   );
 }

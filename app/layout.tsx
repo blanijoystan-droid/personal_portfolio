@@ -70,6 +70,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       style={{ backgroundColor: "#04060a" }}
     >
       <head>
+        {/* Favicon - prevents 404s */}
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>" />
+        
         {/* Preconnect to Google Fonts CDN for performance */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -82,7 +85,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <meta name="color-scheme" content="dark" />
       </head>
       <body
-        className="min-h-screen bg-[#04060a] text-white antialiased cursor-none overflow-x-hidden"
+        className="min-h-screen bg-ocean-deep text-white antialiased overflow-x-hidden"
         style={{ fontFamily: "var(--font-geist-sans), system-ui, sans-serif" }}
       >
         {children}

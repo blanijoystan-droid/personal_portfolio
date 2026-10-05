@@ -2,32 +2,32 @@
 
 import React from 'react';
 import { motion, type Variants } from 'framer-motion';
-import { ArrowRight, Layers, Zap } from 'lucide-react';
+import { ArrowDown, Compass, Layers } from 'lucide-react';
 import { PERSONAL_INFO } from '@/data/portfolioData';
-import { soundFx } from '@/lib/soundEffects';
+import { getZone } from '@/lib/depthZones';
 
 interface HeroSectionProps {
   onNavigate: (section: string) => void;
 }
 
-const textVariants: Variants = {
-  hidden: { opacity: 0, y: 28 },
+const rise: Variants = {
+  hidden: { opacity: 0, y: 26 },
   visible: (delay: number) => ({
     opacity: 1,
     y: 0,
-    transition: { duration: 0.65, delay, ease: [0.25, 0.4, 0.25, 1] as const },
+    transition: { duration: 1.4, delay, ease: [0.22, 1, 0.36, 1] as const },
   }),
 };
 
+const SURFACE = getZone('home');
+
 export function HeroSection({ onNavigate }: HeroSectionProps) {
   const handleExplore = () => {
-    soundFx.playWarp();
     onNavigate('about');
     document.getElementById('section-about')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const handleProjects = () => {
-    soundFx.playClick();
     onNavigate('projects');
     document.getElementById('section-projects')?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -35,149 +35,118 @@ export function HeroSection({ onNavigate }: HeroSectionProps) {
   return (
     <section
       id="section-home"
-      className="relative min-h-screen flex flex-col items-center justify-center text-center px-6 pt-20 pb-10 pointer-events-none"
-      aria-label="Hero — Blani Joystan D'Cunha"
+      className="relative flex min-h-screen flex-col items-center justify-center px-6 pt-28 pb-24 text-center"
+      aria-label="Surface — Blani Joystan Dcunha"
     >
-      {/* Status badge */}
-      <motion.div
-        custom={0.1}
-        initial="hidden"
-        animate="visible"
-        variants={textVariants}
-        className="pointer-events-auto mb-8"
-      >
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[11px] font-mono tracking-widest uppercase font-semibold"
-          style={{
-            background: 'rgba(16, 185, 129, 0.10)',
-            border: '1px solid rgba(16, 185, 129, 0.35)',
-            color: '#34d399',
-          }}
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          {PERSONAL_INFO.availabilityStatus}
-        </div>
-      </motion.div>
-
-      {/* System coordinate label */}
+      {/* Availability — quiet, not a badge shouting for attention */}
       <motion.div
         custom={0.2}
         initial="hidden"
         animate="visible"
-        variants={textVariants}
-        className="font-mono text-[10px] tracking-[0.4em] text-slate-400 uppercase mb-4"
+        variants={rise}
+        className="mb-10"
       >
-        NODE: CORE-00 // BLANI DIGITAL UNIVERSE
+        <p className="inline-flex items-center gap-2.5 font-mono text-[11px] tracking-[0.2em] text-[#a8e4e0] uppercase">
+          <span className="h-1 w-1 rounded-full bg-[#8fe8e2] shadow-[0_0_8px_rgba(143,232,226,0.9)]" />
+          {PERSONAL_INFO.availabilityStatus}
+        </p>
       </motion.div>
 
-      {/* Main Name */}
+      {/* Name — the only genuinely large type on the page */}
       <motion.h1
-        custom={0.35}
-        initial="hidden"
-        animate="visible"
-        variants={textVariants}
-        className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight leading-[1.08] mb-4"
-        style={{ fontFamily: 'var(--font-geist-sans), sans-serif' }}
-      >
-        <span className="text-white">BLANI JOYSTAN</span>
-        <br />
-        <span
-          className="bg-clip-text text-transparent"
-          style={{ backgroundImage: 'linear-gradient(90deg, #00f0ff 0%, #3b82f6 50%, #8b5cf6 100%)' }}
-        >
-          D&apos;CUNHA
-        </span>
-      </motion.h1>
-
-      {/* Title */}
-      <motion.p
         custom={0.5}
         initial="hidden"
         animate="visible"
-        variants={textVariants}
-        className="font-mono text-[13px] sm:text-sm tracking-widest text-slate-300 mb-5 flex items-center justify-center gap-3 flex-wrap"
+        variants={rise}
+        className="mb-7 text-5xl leading-[1.05] font-light tracking-tight text-balance sm:text-6xl md:text-7xl"
+      >
+        <span className="block text-[#f2fbfa]">BLANI JOYSTAN</span>
+        <span className="block text-[#cfe9e6]">DCUNHA</span>
+      </motion.h1>
+
+      {/* Role */}
+      <motion.p
+        custom={0.8}
+        initial="hidden"
+        animate="visible"
+        variants={rise}
+        className="mb-6 flex flex-wrap items-center justify-center gap-3 font-mono text-[13px] tracking-[0.12em] text-[#9fd8d4] uppercase"
       >
         <span>{PERSONAL_INFO.title}</span>
-        <span className="text-cyan-500">•</span>
+        <span className="text-[#4f8a91]">·</span>
         <span>{PERSONAL_INFO.subtitle}</span>
       </motion.p>
 
       {/* Statement */}
       <motion.p
-        custom={0.65}
+        custom={1.05}
         initial="hidden"
         animate="visible"
-        variants={textVariants}
-        className="max-w-xl text-slate-300 text-base sm:text-[17px] leading-relaxed mb-10 mx-auto"
-        style={{ fontFamily: 'var(--font-geist-sans)' }}
+        variants={rise}
+        className="mx-auto mb-12 max-w-xl text-[17px] leading-relaxed text-[#d8ecea] text-balance"
       >
-        &ldquo;{PERSONAL_INFO.statement}&rdquo;
+        {PERSONAL_INFO.statement}
       </motion.p>
 
-      {/* CTA Buttons */}
+      {/* Actions */}
       <motion.div
-        custom={0.8}
+        custom={1.3}
         initial="hidden"
         animate="visible"
-        variants={textVariants}
-        className="pointer-events-auto flex flex-col sm:flex-row items-center gap-3"
+        variants={rise}
+        className="flex flex-col items-center gap-3 sm:flex-row"
       >
         <button
           onClick={handleExplore}
-          data-cursor="EXPLORE"
-          aria-label="Explore my world"
-          className="group relative flex items-center gap-2.5 px-6 py-3 rounded-lg font-mono text-sm font-bold tracking-wider text-[#04060a] transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
-          style={{ background: 'linear-gradient(90deg, #00f0ff, #3b82f6)' }}
+          className="group inline-flex items-center gap-2.5 rounded-full bg-[#d6f7f4] px-7 py-3.5 font-mono text-[13px] font-medium tracking-[0.12em] text-[#032029] transition-all duration-500 hover:bg-white hover:shadow-[0_0_40px_-8px_rgba(214,247,244,0.45)] focus-visible:ring-2 focus-visible:ring-[#9ff2ec]"
         >
-          <Zap className="w-4 h-4" />
-          EXPLORE MY WORLD
-          <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+          <Compass className="h-4 w-4 transition-transform duration-500 group-hover:-rotate-12" />
+          Begin the descent
         </button>
 
         <button
           onClick={handleProjects}
-          data-cursor="VIEW"
-          aria-label="View projects"
-          className="flex items-center gap-2.5 px-6 py-3 rounded-lg font-mono text-sm font-bold tracking-wider text-slate-200 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400"
-          style={{
-            background: 'rgba(255, 255, 255, 0.04)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-          }}
-          onMouseEnter={e => {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(0, 240, 255, 0.4)';
-            (e.currentTarget as HTMLButtonElement).style.color = '#00f0ff';
-          }}
-          onMouseLeave={e => {
-            (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255, 255, 255, 0.15)';
-            (e.currentTarget as HTMLButtonElement).style.color = '#e2e8f0';
-          }}
+          className="glass-soft inline-flex items-center gap-2.5 rounded-full px-7 py-3.5 font-mono text-[13px] tracking-[0.12em] text-[#cfe9e6] focus-visible:ring-2 focus-visible:ring-[#9ff2ec]"
         >
-          <Layers className="w-4 h-4" />
-          VIEW PROJECTS
+          <Layers className="h-4 w-4" />
+          View projects
         </button>
       </motion.div>
 
       {/* Philosophy */}
-      <motion.div
-        custom={0.95}
+      <motion.p
+        custom={1.55}
         initial="hidden"
         animate="visible"
-        variants={textVariants}
-        className="mt-12 font-mono text-[10px] tracking-[0.35em] text-slate-500 uppercase"
+        variants={rise}
+        className="mt-16 max-w-md font-mono text-[11px] leading-relaxed tracking-[0.14em] text-[#7fb8bd] uppercase"
       >
         {PERSONAL_INFO.philosophy}
-      </motion.div>
+      </motion.p>
 
-      {/* Scroll down hint */}
-      <motion.div
-        custom={1.1}
+      {/* Descent cue */}
+      <motion.button
+        custom={1.9}
         initial="hidden"
         animate="visible"
-        variants={textVariants}
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1.5"
+        variants={rise}
+        onClick={handleExplore}
+        className="group absolute bottom-10 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2.5"
+        aria-label="Scroll to continue the descent"
       >
-        <div className="h-8 w-px bg-gradient-to-b from-transparent to-cyan-400/60" />
-        <span className="font-mono text-[9px] tracking-widest text-slate-400 uppercase">SCROLL TO BEGIN</span>
-      </motion.div>
+        <span className="font-mono text-[10px] tracking-[0.28em] text-[#7fb8bd] uppercase transition-colors duration-500 group-hover:text-[#9fd8d4]">
+          Descend
+        </span>
+        <motion.span
+          animate={{ y: [0, 7, 0], opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 3.4, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <ArrowDown className="h-4 w-4 text-[#8fd8d4]" />
+        </motion.span>
+        <span className="font-mono text-[9px] tracking-[0.2em] text-[#5f9ca3] uppercase">
+          {SURFACE.depth} M
+        </span>
+      </motion.button>
     </section>
   );
 }
